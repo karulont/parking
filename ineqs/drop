@@ -1,0 +1,12 @@
+Names:
+nstat[v,'cr',t] nstat[v,'cr',t+1] nstat[v,'rc',t+2] drop[v,'cr',t] nstat[v,'cr',t+2]
+
+Vertices:
+1 1 1 1 0
+1 1 0 0 1
+1 1 1 0 1
+0 1 0 0 0
+0 1 0 0 1
+0 0 1 0 1
+0 0 1 0 0
+0 0 0 0 0
