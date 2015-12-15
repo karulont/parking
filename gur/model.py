@@ -52,16 +52,20 @@ def createModel():
         if y < ysize - 1:
             yield (x,y+1)
 
+    WEST = 0
+    NORTH = 1
+    EAST = 2
+    SOUTH = 3
     def edg(node, d):
         assert d >= 0 and d <= 3
         x,y = node
-        if d == 0: # west
+        if d == WEST: # west
             return (x - 1, y)
-        elif d == 1: # north
+        elif d == NORTH: # north
             return (x, y - 1)
-        elif d == 2:
+        elif d == EAST:
             return (x+1, y)
-        elif d == 3:
+        elif d == SOUTH:
             return (x, y + 1)
 
     K = 3
@@ -161,7 +165,7 @@ def createModel():
         for v,t in itertools.product(neighbours(u), timeiter):
             try:
                 o = occu[u,v,t]
-                no = occu[v,u,t]
+                no = occ[v,u,t]
                 mo.addConstr(quicksum([o,no]) <= 1)
             except KeyError:
                 pass
@@ -230,15 +234,24 @@ def createModel():
             pass
 
     # dropping time constraint
-    mo.addConstr(drop[(0,0),'cr',0] == 1, name="the drop")
     for v,w,t in itertools.product(nodes(), dropWhat, timeiter):
         try:
-            mo.addConstr(drop[v,'cr',t] + nstat[v,'cr',t+2] <= 1)
-            mo.addConstr(-nstat[v,'cr',t] + nstat[v,'cr',t+1] + nstat[v,'rc',t+2] 
-                    <= 1)
-            mo.addConstr(-nstat[v,'cr',t+1] -nstat[v,'rc',t+2] +2*drop[v,'cr',t] 
-                    +nstat[v,'cr',t+2] <= 0)
-            mo.addConstr(nstat[v,'cr',t] -drop[v,'cr',t] -nstat[v,'cr',t+2] <= 0)
+            mo.addConstr(-nstat[v,'cr',t+1] +drop[v,'cr',t] <= 0)
+            mo.addConstr(-nstat[v,'cr',t] +drop[v,'cr',t] <= 0)
+            mo.addConstr(nstat[v,'cr',t] +nstat[v,'rc',t+2] -drop[v,'cr',t] <= 1)
+            mo.addConstr(nstat[v,'cr',t+1] -drop[v,'cr',t] -nstat[v,'cr',t+2] <= 0)
+            mo.addConstr(-nstat[v,'rc',t+2] +drop[v,'cr',t] <= 0)
+        except KeyError:
+            pass
+
+    # lifting time constraint
+    for v,w,t in itertools.product(nodes(), dropWhat, timeiter):
+        try:
+            mo.addConstr(-nstat[v,'cr',t+1] +drop[v,'cr',t] <= 0)
+            mo.addConstr(-nstat[v,'cr',t] +drop[v,'cr',t] <= 0)
+            mo.addConstr(nstat[v,'cr',t] +nstat[v,'rc',t+2] -drop[v,'cr',t] <= 1)
+            mo.addConstr(nstat[v,'cr',t+1] -drop[v,'cr',t] -nstat[v,'cr',t+2] <= 0)
+            mo.addConstr(-nstat[v,'rc',t+2] +drop[v,'cr',t] <= 0)
         except KeyError:
             pass
 
