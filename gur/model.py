@@ -33,7 +33,7 @@ def makeWhat(K):
 def createModel():
     xsize = 2
     ysize = 2
-    maxt = 6
+    maxt = 10
 
     timeiter = range(maxt)
     diriter = range(4)
@@ -56,6 +56,10 @@ def createModel():
     NORTH = 1
     EAST = 2
     SOUTH = 3
+
+    def oppositeDir(d):
+        return (d+2) % 4
+
     def edg(node, d):
         assert d >= 0 and d <= 3
         x,y = node
@@ -112,6 +116,15 @@ def createModel():
 
     mo.update()
 
+    def checkNode(node):
+        return (node,'e',0) in nstat
+
+    def checkEdge(edge):
+        return (edge, 0) in occu
+
+    def checkTime(t, dt):
+        return t+dt < maxt
+
     # add objective
     costvars = set()
     
@@ -139,7 +152,7 @@ def createModel():
             return v
         # robot
         mo.addConstr(nstat[specifyNode(0,0), 'cr', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,0), 'rc', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,0), 'e', 0] == 1)
         """
         # special cars
         mo.addConstr(nstat[specifyNode(2,2), 'sc0', 0] == 1)
@@ -163,21 +176,15 @@ def createModel():
     # edge can be used once per timestep
     for u in nodes():
         for v,t in itertools.product(neighbours(u), timeiter):
-            try:
-                o = occu[u,v,t]
-                no = occ[v,u,t]
-                mo.addConstr(quicksum([o,no]) <= 1)
-            except KeyError:
-                pass
+            o = occu[u,v,t]
+            no = occu[v,u,t]
+            mo.addConstr(quicksum([o,no]) <= 1)
 
     # more than one vehicle cannot arrive at same node
     for v,t in itertools.product(nodes(), timeiter):
         s = []
         for u in neighbours(v):
-            try:
-                s.append(occu[u,v,t])
-            except KeyError:
-                pass
+            s.append(occu[u,v,t])
         mo.addConstr(quicksum(s) <= 1)
 
     # orthogonal directions
@@ -212,48 +219,76 @@ def createModel():
         mo.addConstr(quicksum(s) <= 1)
 
     # robot movements
-    for v,w,d,t in itertools.product(nodes(), moveWhat, diriter, timeiter):
-        try:
-            # TODO: what is this?
-            """
-            numberOfSteps = 1
-            mo.addConstr(2 * go[v,w,d,t] - occu[v,edg(v,d),t] 
-                    -nstat[edg(v,d),w,t+1] <= 0)
-            """
-            pass
-        except KeyError:
-            pass
+    for u,w,d in itertools.product(nodes(), moveWhat, diriter):
+        v = edg(u,d);
+        if not checkNode(v):
+            # Off grid in that direction
+            continue
+        for t in timeiter:
+            if (d == NORTH or d == SOUTH) and (w == 'cr' or w in scrj):
+                # movement is slow and length is long
+                if checkTime(t,5):
+                    mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+4] -cont[u,w,d,t+4] +nstat[u,w,t] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+2] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+3] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+4] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+5] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+1] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+2] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+3] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+4] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,'e',t] <= 1)
+            elif (d == EAST or d == WEST) and (w == 'r' or w == 'rc' or w in rscj):
+                # movement fast and lenght short
+                if checkTime(t,2):
+                    mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+1] -cont[u,w,d,t+1] +nstat[u,w,t] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+2] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+1] <= 1)
+            else:
+                # movement fast and long or movement slow and short
+                if checkTime(t,3):
+                    mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+2] -cont[u,w,d,t+2] +nstat[u,w,t] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+2] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+3] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+1] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+2] <= 1)
 
-    # node stat timestep constraints
-    for v,t in itertools.product(nodes(), timeiter):
-        try:
-            # TODO: not done
-            # mo.addConstr(nstat[v,'e',t] - nstat[v,'e',t+1] == 0)
-            pass
-        except KeyError:
-            pass
+    # node status changes constraints for empty node
+    for u,t in itertools.product(nodes(), timeiter):
+        if checkTime(t,1):
+            s = []
+            for d in diriter:
+                v = edg(u,d);
+                if checkNode(v):
+                    s.append(stop[v,'cr',oppositeDir(d), t])
+                    s.append(cont[v,'cr',oppositeDir(d), t])
+                    mo.addConstr(nstat[u,'e',t] -nstat[u,'cr',t+1] +cont[v,'cr',d,t] <= 1)
+                    mo.addConstr(nstat[u,'e',t] +nstat[u,'cr',t+1] +cont[v,'cr',d,t] <= 2)
+
+            mo.addConstr(nstat[u,'e',t] -nstat[u,'e',t+1] -nstat[u,'cr',t+1] <= 0);
+            mo.addConstr(nstat[u,'e',t] -nstat[u,'e',t+1] -quicksum(s) <= 0);
+            mo.addConstr(nstat[u,'e',t] +nstat[u,'e',t+1] -quicksum(s) <= 1);
 
     # dropping time constraint
     for v,w,t in itertools.product(nodes(), dropWhat, timeiter):
-        try:
+        if checkTime(t,2):
             mo.addConstr(-nstat[v,'cr',t+1] +drop[v,'cr',t] <= 0)
             mo.addConstr(-nstat[v,'cr',t] +drop[v,'cr',t] <= 0)
             mo.addConstr(nstat[v,'cr',t] +nstat[v,'rc',t+2] -drop[v,'cr',t] <= 1)
             mo.addConstr(nstat[v,'cr',t+1] -drop[v,'cr',t] -nstat[v,'cr',t+2] <= 0)
             mo.addConstr(-nstat[v,'rc',t+2] +drop[v,'cr',t] <= 0)
-        except KeyError:
-            pass
 
     # lifting time constraint
     for v,w,t in itertools.product(nodes(), dropWhat, timeiter):
-        try:
+        if checkTime(t,2):
             mo.addConstr(-nstat[v,'cr',t+1] +drop[v,'cr',t] <= 0)
             mo.addConstr(-nstat[v,'cr',t] +drop[v,'cr',t] <= 0)
             mo.addConstr(nstat[v,'cr',t] +nstat[v,'rc',t+2] -drop[v,'cr',t] <= 1)
             mo.addConstr(nstat[v,'cr',t+1] -drop[v,'cr',t] -nstat[v,'cr',t+2] <= 0)
             mo.addConstr(-nstat[v,'rc',t+2] +drop[v,'cr',t] <= 0)
-        except KeyError:
-            pass
 
     mo.optimize()
 
@@ -296,7 +331,7 @@ def createModel():
                 s += nstat[v,w,t].x
             print(s)
 
-            #check for decisions
+            #check for decisions errors
             s = 0
             for v in nodes():
                 for d,w in itertools.product(diriter, moveWhat):
