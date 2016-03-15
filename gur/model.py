@@ -57,6 +57,16 @@ def createModel():
     EAST = 2
     SOUTH = 3
 
+    def dir2c(d):
+        if d == WEST:
+            return 'W'
+        elif d == NORTH:
+            return 'N'
+        elif d == EAST:
+            return 'E'
+        elif d == SOUTH:
+            return 'S'
+
     def oppositeDir(d):
         return (d+2) % 4
 
@@ -72,7 +82,7 @@ def createModel():
         elif d == SOUTH:
             return (x, y + 1)
 
-    K = 3
+    K = 0
     what, scj, rscj, scrj, slftj, sdrpj = makeWhat(K)
     moveWhat = set(['r', 'cr', 'rc']).union(rscj, scrj)
     liftWhat = set(['rc']).union(rscj)
@@ -135,7 +145,6 @@ def createModel():
     # drop car TODO: temporary
     for t in timeiter:
         costvars.add(nstat[v,'rc',t])
-        costvars.add(nstat[(1,0),'cr',t])
     for var in costvars:
         var.obj = -1
 
@@ -150,9 +159,23 @@ def createModel():
             assert v not in definedNodes
             definedNodes.add(v)
             return v
+
+        # important: at time 0 everything is still so do not allow continue or stop
+        for u,w,d in itertools.product(nodes(), moveWhat, diriter):
+            v = edg(u,d);
+            if not checkNode(v):
+                # Off grid in that direction
+                continue
+            mo.addConstr(cont[u,w,d,0] == 0);
+            mo.addConstr(stop[u,w,d,0] == 0);
+
+
         # robot
-        mo.addConstr(nstat[specifyNode(0,0), 'cr', 0] == 1)
+        mo.addConstr(nstat[specifyNode(0,0), 'c', 0] == 1)
         mo.addConstr(nstat[specifyNode(1,0), 'e', 0] == 1)
+        mo.addConstr(nstat[specifyNode(0,1), 'r', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,1), 'e', 0] == 1)
+        #mo.addConstr(drop[(0,0), 'cr', 0] == 1)
         """
         # special cars
         mo.addConstr(nstat[specifyNode(2,2), 'sc0', 0] == 1)
@@ -167,6 +190,10 @@ def createModel():
         """
 
     fixInitialConfiguration()
+
+    # some ideas for good constraints:
+    #  * count the number of cars, make sure that it stays same
+    #  * count the number of robots, make sure that it stays same
 
     # one status per node per timestep
     for v,t in itertools.product(nodes(), timeiter):
@@ -259,18 +286,25 @@ def createModel():
     # node status changes constraints for empty node
     for u,t in itertools.product(nodes(), timeiter):
         if checkTime(t,1):
-            s = []
-            for d in diriter:
+            contOrStop = []
+            gos = []
+            for d,w in itertools.product(diriter, moveWhat):
                 v = edg(u,d);
                 if checkNode(v):
-                    s.append(stop[v,'cr',oppositeDir(d), t])
-                    s.append(cont[v,'cr',oppositeDir(d), t])
-                    mo.addConstr(nstat[u,'e',t] -nstat[u,'cr',t+1] +cont[v,'cr',d,t] <= 1)
-                    mo.addConstr(nstat[u,'e',t] +nstat[u,'cr',t+1] +cont[v,'cr',d,t] <= 2)
+                    contOrStop.append(cont[v,w,oppositeDir(d), t])
+                    contOrStop.append(stop[v,w,oppositeDir(d), t])
+                    gos.append(go[u,w,d,t]);
 
-            mo.addConstr(nstat[u,'e',t] -nstat[u,'e',t+1] -nstat[u,'cr',t+1] <= 0);
-            mo.addConstr(nstat[u,'e',t] -nstat[u,'e',t+1] -quicksum(s) <= 0);
-            mo.addConstr(nstat[u,'e',t] +nstat[u,'e',t+1] -quicksum(s) <= 1);
+            SCS0 = quicksum(contOrStop)
+            SG0 = quicksum(gos)
+            mo.addConstr(nstat[u,'e',t] -nstat[u,'e',t+1] -SCS0 +SG0 == 0)
+
+            mo.addConstr(-nstat[u,'e',t+1] -SCS0 +SG0 <= 0)
+            mo.addConstr(-nstat[u,'e',t+1] <= 0)
+            mo.addConstr(-SCS0 <= 0)
+            mo.addConstr(-SG0 <= 0)
+            mo.addConstr(nstat[u,'e',t+1] +SCS0 <= 1)
+
 
     # dropping time constraint
     for v,w,t in itertools.product(nodes(), dropWhat, timeiter):
@@ -307,20 +341,21 @@ def createModel():
                 s += '\t\t'
                 for x in range(xsize):
                     v = (x,y)
-                    decision = '{:7}'.format('_')
+                    decision = '{:10}'.format('_')
                     for d,w in itertools.product(diriter, moveWhat):
+                        td = dir2c(d)
                         if go[v,w,d,t].x == 1:
-                            decision = '{:^7}'.format('GO_{}'.format(d))
+                            decision = '{:^10}'.format('GO_{}{}'.format(td,w))
                         if stop[v,w,d,t].x == 1:
-                            decision = '{:^7}'.format('STOP_{}'.format(d))
+                            decision = '{:^10}'.format('STOP_{}{}'.format(td,w))
                         if cont[v,w,d,t].x == 1:
-                            decision = '{:^7}'.format('CONT{}'.format(d))
+                            decision = '{:^10}'.format('CONT_{}{}'.format(td,w))
                     for w in liftWhat:
                         if lift[v,w,t].x == 1:
-                            decision = '{:^7}'.format('LIFT')
+                            decision = '{:^10}'.format('LIFT')
                     for w in dropWhat:
                         if drop[v,w,t].x == 1:
-                            decision = '{:^7}'.format('DROP')
+                            decision = '{:^10}'.format('DROP')
 
                     s += decision
                 print(s)
