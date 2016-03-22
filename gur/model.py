@@ -51,7 +51,7 @@ def createModel():
         return (edge, 0) in occu
 
     def checkTime(t, dt):
-        return t+dt < maxt
+        return t+dt < maxt and t+dt >= 0
 
     # add objective
     costvars = set()
@@ -62,7 +62,7 @@ def createModel():
         pass
     # drop car TODO: temporary
     for t in timeiter:
-        costvars.add(nstat[v,'rc',t])
+        costvars.add(nstat[v,'r',t])
     for var in costvars:
         var.obj = -1
 
@@ -89,11 +89,19 @@ def createModel():
 
 
         # robot
-        mo.addConstr(nstat[specifyNode(0,0), 'c', 0] == 1)
+        mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
         mo.addConstr(nstat[specifyNode(1,0), 'e', 0] == 1)
-        mo.addConstr(nstat[specifyNode(0,1), 'r', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,1), 'e', 0] == 1)
+        mo.addConstr(nstat[specifyNode(0,1), 'e', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,1), 'rc', 0] == 1)
         #mo.addConstr(drop[(0,0), 'cr', 0] == 1)
+
+        """
+        # do not allow lift and drop
+        for v,t in itertools.product(nodes(), timeiter):
+            s = [nstat[v,w,t] for w in ('lft','drp')]
+            mo.addConstr(quicksum(s) == 0)
+        """
+
         """
         # special cars
         mo.addConstr(nstat[specifyNode(2,2), 'sc0', 0] == 1)
@@ -166,10 +174,12 @@ def createModel():
     # robot movements
     for u,w,d in itertools.product(nodes(), moveWhat, diriter):
         v = edg(u,d);
+        vp = edg(v,d);
         if not checkNode(v):
             # Off grid in that direction
             continue
         for t in timeiter:
+            mo.addConstr(go[u,w,d,t] - nstat[u,w,t] <= 0)
             if (d == NORTH or d == SOUTH) and (w == 'cr' or w in scrj):
                 # movement is slow and length is long
                 if checkTime(t,5):
@@ -184,6 +194,20 @@ def createModel():
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+3] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+4] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,'e',t] <= 1)
+                    mo.addConstr(stop[u,w,d,t+4] -nstat[u,w,t] <= 0)
+                    mo.addConstr(cont[u,w,d,t+4] -nstat[u,w,t] <= 0)
+                    mo.addConstr(stop[u,w,d,t+4] -nstat[u,w,t+4] <= 0)
+                    mo.addConstr(cont[u,w,d,t+4] -nstat[u,w,t+4] <= 0)
+                    if not checkNode(vp):
+                        mo.addConstr(cont[u,w,d,t+4] == 0)
+                    elif checkTime(t,8):
+                        mo.addConstr(cont[v,w,d,t+8] + stop[v,w,d,t+8] -cont[u,w,d,t+4] == 0)
+                if checkTime(t,-4):
+                    mo.addConstr(cont[u,w,d,t] +stop[u,w,d,t] -go[u,w,d,t-4] -cont[u,w,d,t-4] == 0)
+                elif t < 4:
+                    # disable cont or stop because could not be given
+                    mo.addConstr(cont[u,w,d,t] == 0)
+                    mo.addConstr(stop[u,w,d,t] == 0)
             elif (d == EAST or d == WEST) and (w == 'r' or w == 'rc' or w in rscj):
                 # movement fast and lenght short
                 if checkTime(t,2):
@@ -191,6 +215,20 @@ def createModel():
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+2] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+1] <= 1)
+                    mo.addConstr(stop[u,w,d,t+1] -nstat[u,w,t] <= 0)
+                    mo.addConstr(cont[u,w,d,t+1] -nstat[u,w,t] <= 0)
+                    mo.addConstr(stop[u,w,d,t+1] -nstat[u,w,t+1] <= 0)
+                    mo.addConstr(cont[u,w,d,t+1] -nstat[u,w,t+1] <= 0)
+                    if not checkNode(vp):
+                        mo.addConstr(cont[u,w,d,t+1] == 0)
+                    elif checkTime(t,2):
+                        mo.addConstr(cont[vp,w,d,t+2] + stop[vp,w,d,t+2] -cont[u,w,d,t+1] == 0)
+                if checkTime(t,-1):
+                    mo.addConstr(cont[u,w,d,t] +stop[u,w,d,t] -go[u,w,d,t-1] -cont[u,w,d,t-1] == 0)
+                elif t < 1:
+                    # disable cont or stop because could not be given
+                    mo.addConstr(cont[u,w,d,t] == 0)
+                    mo.addConstr(stop[u,w,d,t] == 0)
             else:
                 # movement fast and long or movement slow and short
                 if checkTime(t,3):
@@ -200,6 +238,20 @@ def createModel():
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+3] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+1] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+2] <= 1)
+                    mo.addConstr(stop[u,w,d,t+2] -nstat[u,w,t] <= 0)
+                    mo.addConstr(cont[u,w,d,t+2] -nstat[u,w,t] <= 0)
+                    mo.addConstr(stop[u,w,d,t+2] -nstat[u,w,t+2] <= 0)
+                    mo.addConstr(cont[u,w,d,t+2] -nstat[u,w,t+2] <= 0)
+                    if not checkNode(vp):
+                        mo.addConstr(cont[u,w,d,t+2] == 0)
+                    elif checkTime(t,4):
+                        mo.addConstr(cont[v,w,d,t+4] + stop[v,w,d,t+4] -cont[u,w,d,t+2] == 0)
+                if checkTime(t,-2):
+                    mo.addConstr(cont[u,w,d,t] +stop[u,w,d,t] -go[u,w,d,t-2] -cont[u,w,d,t-2] == 0)
+                elif t < 2:
+                    # disable cont or stop because could not be given
+                    mo.addConstr(cont[u,w,d,t] == 0)
+                    mo.addConstr(stop[u,w,d,t] == 0)
 
     # node status changes constraints for empty node
     for u,t in itertools.product(nodes(), timeiter):
@@ -211,7 +263,8 @@ def createModel():
                 if checkNode(v):
                     contOrStop.append(cont[v,w,oppositeDir(d), t])
                     contOrStop.append(stop[v,w,oppositeDir(d), t])
-                    gos.append(go[u,w,d,t]);
+                    gos.append(stop[u,w,d,t]);
+                    gos.append(cont[u,w,d,t]);
 
             SCS0 = quicksum(contOrStop)
             SG0 = quicksum(gos)
@@ -222,6 +275,11 @@ def createModel():
             mo.addConstr(-SCS0 <= 0)
             mo.addConstr(-SG0 <= 0)
             mo.addConstr(nstat[u,'e',t+1] +SCS0 <= 1)
+
+    # node status changes for car nodes
+    for u,t in itertools.product(nodes(), timeiter):
+        if checkTime(t,1):
+            pass
 
 
     # dropping time constraint
