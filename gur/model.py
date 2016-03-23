@@ -92,7 +92,9 @@ def createModel():
         mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
         mo.addConstr(nstat[specifyNode(1,0), 'e', 0] == 1)
         mo.addConstr(nstat[specifyNode(0,1), 'e', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,1), 'rc', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,1), 'r', 0] == 1)
+        mo.addConstr(nstat[specifyNode(2,0), 'e', 0] == 1)
+        mo.addConstr(nstat[specifyNode(2,1), 'r', 0] == 1)
         #mo.addConstr(drop[(0,0), 'cr', 0] == 1)
 
         """
@@ -209,6 +211,7 @@ def createModel():
                     mo.addConstr(cont[u,w,d,t] == 0)
                     mo.addConstr(stop[u,w,d,t] == 0)
             elif (d == EAST or d == WEST) and (w == 'r' or w == 'rc' or w in rscj):
+                ws,we = whatSE(w)
                 # movement fast and lenght short
                 if checkTime(t,2):
                     mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+1] -cont[u,w,d,t+1] +nstat[u,w,t] <= 1)
@@ -317,7 +320,7 @@ def createModel():
                 s += '\t\t'
                 for x in range(xsize):
                     v = (x,y)
-                    decision = '{:10}'.format('_')
+                    decision = '{:^10}'.format('_')
                     for d,w in itertools.product(diriter, moveWhat):
                         td = dir2c(d)
                         if go[v,w,d,t].x == 1:
@@ -334,6 +337,23 @@ def createModel():
                             decision = '{:^10}'.format('DROP')
 
                     s += decision
+                s += '\t\t'
+                for x in range(xsize-1):
+                    continue
+                    u = (x,y)
+                    ur = (x+1,y)
+                    ud = (x,y+1)
+                    right = occu[(u,ur),t].x == 1
+                    down = occu[(u,ud),t].x == 1
+                    if right and down:
+                        s += '{:^3}'.format('+')
+                    elif right:
+                        s += '{:^3}'.format('_')
+                    elif down:
+                        s += '{:^3}'.format('|')
+                    else:
+                        s += '{:^3}'.format('.')
+
                 print(s)
 
             #check for nstat errors

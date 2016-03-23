@@ -60,6 +60,23 @@ def edg(node, d):
     elif d == SOUTH:
         return (x, y + 1)
 
+def normalizeEdge(edg):
+    (x1,y1), (x2,y2) = edg
+    if x2 > x1:
+        assert y1 == y2
+        return edg
+    elif y2 > y1:
+        assert x1 == x2
+        return edg
+    elif x1 > x2:
+        assert y1 == y2
+        return (x2,y2),(x1,y1)
+    elif y1 > y2:
+        assert x1 == x2
+        return (x2,y2),(x1,y1)
+    else:
+        raise NameError('edg is not good!' + str(edg))
+
 def nodes():
     return itertools.product(range(xsize),range(ysize))
 
@@ -81,3 +98,13 @@ what, scj, rscj, scrj, slftj, sdrpj = makeWhat(K)
 moveWhat = set(['r', 'cr', 'rc']).union(rscj, scrj)
 liftWhat = set(['rc']).union(rscj)
 dropWhat = set(['cr']).union(scrj)
+
+def whatSE(w):
+    if w == 'r':
+        return ('e','r')
+    elif w == 'cr':
+        return ('e','cr')
+    elif w == 'rc':
+        return ('c','r')
+    else:
+        raise NameError(w)

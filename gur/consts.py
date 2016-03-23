@@ -1,4 +1,4 @@
-xsize = 2
+xsize = 3
 ysize = 2
-maxt = 15
+maxt = 1
 K = 0
