@@ -14,14 +14,10 @@ def createModel():
         set[key] = mo.addVar(vtype = GRB.BINARY, name = setname + str(key).replace(" ",""))
 
     for (x,y),t in itertools.product(nodes(), timeiter):
-        if x > 0:
-            addVar(occu, "occu", ((x,y),(x-1,y),t))
-        if y > 0:
-            addVar(occu, "occu", ((x,y),(x,y-1),t))
         if x < xsize - 1:
-            addVar(occu, "occu", ((x,y),(x+1,y),t))
+            addVar(occu, "occu", (((x,y),(x+1,y)),t))
         if y < ysize - 1:
-            addVar(occu, "occu", ((x,y),(x,y+1),t))
+            addVar(occu, "occu", (((x,y),(x,y+1)),t))
         for w in what:
             addVar(nstat, "nstat", ((x,y), w, t))
 
@@ -128,18 +124,11 @@ def createModel():
         s = [nstat[v,w,t] for w in what]
         mo.addConstr(quicksum(s) == 1)
 
-    # edge can be used once per timestep
-    for u in nodes():
-        for v,t in itertools.product(neighbours(u), timeiter):
-            o = occu[u,v,t]
-            no = occu[v,u,t]
-            mo.addConstr(quicksum([o,no]) <= 1)
-
     # more than one vehicle cannot arrive at same node
     for v,t in itertools.product(nodes(), timeiter):
         s = []
         for u in neighbours(v):
-            s.append(occu[u,v,t])
+            s.append(occu[normalizeEdge((u,v)),t])
         mo.addConstr(quicksum(s) <= 1)
 
     # orthogonal directions
@@ -185,16 +174,17 @@ def createModel():
             if (d == NORTH or d == SOUTH) and (w == 'cr' or w in scrj):
                 # movement is slow and length is long
                 if checkTime(t,5):
+                    e = normalizeEdge((u,v))
                     mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+4] -cont[u,w,d,t+4] +nstat[u,w,t] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+2] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+3] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+4] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+5] <= 1)
-                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+1] <= 1)
-                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+2] <= 1)
-                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+3] <= 1)
-                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+4] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+1] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+2] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+3] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+4] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,'e',t] <= 1)
                     mo.addConstr(stop[u,w,d,t+4] -nstat[u,w,t] <= 0)
                     mo.addConstr(cont[u,w,d,t+4] -nstat[u,w,t] <= 0)
@@ -214,10 +204,11 @@ def createModel():
                 ws,we = whatSE(w)
                 # movement fast and lenght short
                 if checkTime(t,2):
+                    e = normalizeEdge((u,v))
                     mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+1] -cont[u,w,d,t+1] +nstat[u,w,t] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+2] <= 1)
-                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+1] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+1] <= 1)
                     mo.addConstr(stop[u,w,d,t+1] -nstat[u,w,t] <= 0)
                     mo.addConstr(cont[u,w,d,t+1] -nstat[u,w,t] <= 0)
                     mo.addConstr(stop[u,w,d,t+1] -nstat[u,w,t+1] <= 0)
@@ -235,12 +226,13 @@ def createModel():
             else:
                 # movement fast and long or movement slow and short
                 if checkTime(t,3):
+                    e = normalizeEdge((u,v))
                     mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+2] -cont[u,w,d,t+2] +nstat[u,w,t] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+2] <= 1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+3] <= 1)
-                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+1] <= 1)
-                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[u,v,t+2] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+1] <= 1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+2] <= 1)
                     mo.addConstr(stop[u,w,d,t+2] -nstat[u,w,t] <= 0)
                     mo.addConstr(cont[u,w,d,t+2] -nstat[u,w,t] <= 0)
                     mo.addConstr(stop[u,w,d,t+2] -nstat[u,w,t+2] <= 0)
@@ -338,13 +330,18 @@ def createModel():
 
                     s += decision
                 s += '\t\t'
-                for x in range(xsize-1):
-                    continue
+                for x in range(xsize):
                     u = (x,y)
                     ur = (x+1,y)
                     ud = (x,y+1)
-                    right = occu[(u,ur),t].x == 1
-                    down = occu[(u,ud),t].x == 1
+                    if x == xsize-1:
+                        right = False
+                    else:
+                        right = occu[(u,ur),t].x == 1
+                    if y == ysize-1:
+                        down = False
+                    else:
+                        down = occu[(u,ud),t].x == 1
                     if right and down:
                         s += '{:^3}'.format('+')
                     elif right:

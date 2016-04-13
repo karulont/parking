@@ -1,4 +1,4 @@
 xsize = 3
 ysize = 2
-maxt = 1
+maxt = 11
 K = 0
