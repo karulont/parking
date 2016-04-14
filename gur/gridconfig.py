@@ -52,8 +52,8 @@ class GridConfig:
 
     def edges(self):
         for u in self.nodes():
-            for v in self.nodes():
-                if u != v:
+            for v in self.neighbours(u):
+                if v in self.nodeSet:
                     yield normalizeEdge((u,v))
 
     def neighbours(self, node):

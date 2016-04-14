@@ -262,6 +262,14 @@ class GurobiModel:
         sit.objective(self.model, self.vars)
         self.model.update()
 
+    def checkStatus(self, fname):
+        if self.model.status == GRB.status.OPTIMAL:
+            return True
+        else:
+            self.model.computeIIS()
+            self.model.write(fname + '.ilp')
+            return False
+
     def visualize(self):
         # quick reference
         nstat = self.vars.nstat
@@ -336,7 +344,8 @@ class GurobiModel:
                 s = 0
                 for v,w in itertools.product(self.conf.nodes(),what):
                     s += nstat[v,w,t].x
-                print(s)
+
+                sum_nstat = s
 
                 #check for decisions errors
                 s = 0
@@ -349,7 +358,16 @@ class GurobiModel:
                         s += lift[v,w,t].x
                     for w in dropWhat:
                         s += drop[v,w,t].x
-                print(s)
+
+                sum_decisions = s
+
+                #check for edge errors
+                s = 0
+                for e in self.conf.edges():
+                    s += occu[e,t].x
+
+                sum_occus = s
+                print('Nstats %r, Decisions %r, Occus %r' % (sum_nstat, sum_decisions, sum_occus))
                 sys.stdin.read(1)
 
         else:
