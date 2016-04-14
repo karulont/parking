@@ -6,6 +6,7 @@ from direction import *
 class TestBase:
     def __init__(self, name):
         self.name = name
+        all_tests.append(self)
 
     def run(self):
         conf = self.conf
@@ -21,3 +22,5 @@ class TestBase:
 
         # for future reference
         self.model = model
+
+all_tests = list()
