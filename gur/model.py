@@ -10,8 +10,8 @@ class GurobiModel:
     def __init__(self, conf):
 
         self.conf = conf
-        self.initialModel = Model("parking")
-        self.model = self.initialModel
+        self.model = Model("parking")
+        self.model.params.LogToConsole = False
 
         def addFunc(set, setname, key):
             set[key] = self.model.addVar(vtype = GRB.BINARY,
@@ -22,8 +22,7 @@ class GurobiModel:
         self.addConstraints()
 
     def addConstraints(self):
-        mo = self.initialModel;
-        self.model = self.initialModel
+        mo = self.model
         # reference grid conf stuff for easier access
         xsize = self.conf.xsize
         ysize = self.conf.ysize
@@ -39,9 +38,9 @@ class GurobiModel:
         scrj = self.conf.scrj
         slftj = self.conf.slftj
         sdrpj = self.conf.sdrpj
-        moveWhat = self.conf.moveWhat 
-        liftWhat = self.conf.liftWhat 
-        dropWhat = self.conf.dropWhat 
+        moveWhat = self.conf.moveWhat
+        liftWhat = self.conf.liftWhat
+        dropWhat = self.conf.dropWhat
 
         checkNode = self.conf.checkNode
         checkEdge = self.conf.checkEdge
@@ -57,7 +56,6 @@ class GurobiModel:
         drop = self.vars.drop
 
         mo.update()
-        print('Adding constraints')
 
         # important: at time 0 everything is still so do not allow continue or stop
         for u,w,d in itertools.product(self.conf.nodes(), self.conf.moveWhat, diriter):
@@ -78,11 +76,18 @@ class GurobiModel:
             s = [nstat[v,w,t] for w in what]
             mo.addConstr(quicksum(s) == 1)
 
+        # edge can be used once per timestep
+        for u in nodes():
+            for v,t in itertools.product(neighbours(u), timeiter):
+                o = occu[(u,v),t]
+                no = occu[(v,u),t]
+                mo.addConstr(quicksum([o,no]) <= 1)
+
         # more than one vehicle cannot arrive at same node
         for v,t in itertools.product(nodes(), timeiter):
             s = []
             for u in neighbours(v):
-                s.append(occu[normalizeEdge((u,v)),t])
+                s.append(occu[(u,v),t])
             mo.addConstr(quicksum(s) <= 1)
 
         # orthogonal directions
@@ -128,7 +133,7 @@ class GurobiModel:
                 if (d == NORTH or d == SOUTH) and (w == 'cr' or w in scrj):
                     # movement is slow and length is long
                     if checkTime(t,5):
-                        e = normalizeEdge((u,v))
+                        e = (u,v)
                         mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+4] -cont[u,w,d,t+4] +nstat[u,w,t] <= 1)
                         mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
                         mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+2] <= 1)
@@ -158,7 +163,7 @@ class GurobiModel:
                     ws,we = whatSE(w)
                     # movement fast and lenght short
                     if checkTime(t,2):
-                        e = normalizeEdge((u,v))
+                        e = (u,v)
                         mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+1] -cont[u,w,d,t+1] +nstat[u,w,t] <= 1)
                         mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
                         mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+2] <= 1)
@@ -180,7 +185,7 @@ class GurobiModel:
                 else:
                     # movement fast and long or movement slow and short
                     if checkTime(t,3):
-                        e = normalizeEdge((u,v))
+                        e = (u,v)
                         mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+2] -cont[u,w,d,t+2] +nstat[u,w,t] <= 1)
                         mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
                         mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+2] <= 1)
@@ -257,7 +262,6 @@ class GurobiModel:
         self.model.optimize()
 
     def setSituation(self, sit):
-        # self.model = self.initialModel.copy()
         sit.situation(self.model, self.vars)
         sit.objective(self.model, self.vars)
         self.model.update()
@@ -281,9 +285,9 @@ class GurobiModel:
         drop = self.vars.drop
 
         what = self.conf.what
-        moveWhat = self.conf.moveWhat 
-        liftWhat = self.conf.liftWhat 
-        dropWhat = self.conf.dropWhat 
+        moveWhat = self.conf.moveWhat
+        liftWhat = self.conf.liftWhat
+        dropWhat = self.conf.dropWhat
 
         if self.model.status == GRB.status.OPTIMAL:
             #print the solution
@@ -371,5 +375,5 @@ class GurobiModel:
                 sys.stdin.read(1)
 
         else:
-            mo.computeIIS()
-            mo.write("model.ilp")
+            self.model.computeIIS()
+            self.model.write("model.ilp")

@@ -17,4 +17,4 @@ def runTests():
     ct.model.visualize()
 
 if __name__ == '__main__':
-    main()
+    runTests()
