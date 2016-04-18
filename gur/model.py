@@ -151,10 +151,10 @@ class GurobiModel:
                 mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+td1] -cont[u,w,d,t+td1] +nstat[u,w,t] <= 1)
 
                 # make sure edges are used
-                for i in range(td):
+                for i in range(td+1):
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+i] <= 1)
                 # make sure the node status remains same for duration of movement
-                for i in range(1,td1): # TODO: can try range(td1)
+                for i in range(1,td): # TODO: can try range(td1)
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+i] <= 1)
 
                 # not sure why this, but okay for now
@@ -172,9 +172,6 @@ class GurobiModel:
                 if not checkNode(vp):
                     # if at edge, disable cont
                     mo.addConstr(cont[u,w,d,td1] == 0)
-                elif checkTime(t,td2):
-                    # cont implies another (cont or stop)
-                    mo.addConstr(cont[v,w,d,t+td2] + stop[v,w,d,t+td2] -cont[u,w,d,t+td1] == 0)
 
                 if t < td1:
                     # disable cont or stop because could not be given
@@ -229,10 +226,9 @@ class GurobiModel:
 
                 SCS0 = quicksum(contOrStop)
                 SG0 = quicksum(gos)
-                mo.addConstr(nstat[u,'e',t] -nstat[u,'e',t+1] -SCS0 +SG0 == 0)
+                #mo.addConstr(nstat[u,'e',t] -nstat[u,'e',t+1] -SCS0 +SG0 == 0)
 
-                mo.addConstr(-nstat[u,'e',t+1] -SCS0 +SG0 <= 0)
-                mo.addConstr(-nstat[u,'e',t+1] <= 0)
+                #mo.addConstr(-nstat[u,'e',t+1] -SCS0 +SG0 <= 0)
                 mo.addConstr(-SCS0 <= 0)
                 mo.addConstr(-SG0 <= 0)
                 mo.addConstr(nstat[u,'e',t+1] +SCS0 <= 1)
@@ -242,27 +238,28 @@ class GurobiModel:
             if checkTime(t,1):
                 pass
 
-
-        """
-        # dropping time constraint
+        # dropping constraints
         for v,w,t in itertools.product(nodes(), dropWhat, timeiter):
             if checkTime(t,2):
-                mo.addConstr(-nstat[v,'cr',t+1] +drop[v,'cr',t] <= 0)
-                mo.addConstr(-nstat[v,'cr',t] +drop[v,'cr',t] <= 0)
-                mo.addConstr(nstat[v,'cr',t] +nstat[v,'rc',t+2] -drop[v,'cr',t] <= 1)
-                mo.addConstr(nstat[v,'cr',t+1] -drop[v,'cr',t] -nstat[v,'cr',t+2] <= 0)
-                mo.addConstr(-nstat[v,'rc',t+2] +drop[v,'cr',t] <= 0)
+                mo.addConstr(drop[v,w,t] -nstat[v,w,t] <= 0)
+                mo.addConstr(drop[v,w,t] -nstat[v,'lft',t+1] <= 0)
+                if w == 'cr':
+                    ws = 'rc'
+                else:
+                    raise Error('implement special')
+                mo.addConstr(drop[v,w,t] -nstat[v,ws,t+2] <= 0)
 
-        # lifting time constraint
-        for v,w,t in itertools.product(nodes(), dropWhat, timeiter):
-            if checkTime(t,2):
-                mo.addConstr(-nstat[v,'cr',t+1] +drop[v,'cr',t] <= 0)
-                mo.addConstr(-nstat[v,'cr',t] +drop[v,'cr',t] <= 0)
-                mo.addConstr(nstat[v,'cr',t] +nstat[v,'rc',t+2] -drop[v,'cr',t] <= 1)
-                mo.addConstr(nstat[v,'cr',t+1] -drop[v,'cr',t] -nstat[v,'cr',t+2] <= 0)
-                mo.addConstr(-nstat[v,'rc',t+2] +drop[v,'cr',t] <= 0)
-        """
-
+        # lifting constraints
+        for v,w,t in itertools.product(nodes(), liftWhat, timeiter):
+            if checkTime(t,6):
+                mo.addConstr(lift[v,w,t] -nstat[v,w,t] <= 0)
+                for i in range(1,6):
+                    mo.addConstr(lift[v,w,t] -nstat[v,'lft',t+i] <= 0)
+                if w == 'rc':
+                    ws = 'cr'
+                else:
+                    raise Error('implement special')
+                mo.addConstr(lift[v,w,t] -nstat[v,ws,t+6] <= 0)
 
         mo.update()
 
