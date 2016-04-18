@@ -9,10 +9,8 @@ class TestBase:
         all_tests.append(self)
 
     def run(self):
-        conf = self.conf
-        sit = self.situation
-        model = GurobiModel(conf)
-        model.setSituation(sit)
+        model = GurobiModel(self.conf)
+        model.setSituation(self.situationObj)
         model.optimize()
         passed = model.checkStatus()
         if passed == self.shouldPass:

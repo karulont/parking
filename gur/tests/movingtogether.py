@@ -1,16 +1,12 @@
 from testbase import *
 
-class MovingTogether(TestBase):
+class MovingTogether(TestBase, Situation):
     def __init__(self):
-        super().__init__()
+        TestBase.__init__(self)
         self.conf = GridConfig(4, 1, 11, 0)
-        self.situation = MovingSituation(self.conf)
+        Situation.__init__(self, self.conf)
+        self.situationObj = self
         self.shouldPass = True
-
-
-class MovingSituation(Situation):
-    def __init__(self, conf):
-        super().__init__(conf)
 
     def situation(self, model, vars):
         mo = model

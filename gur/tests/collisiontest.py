@@ -1,16 +1,12 @@
 from testbase import *
 
-class CollisionTest(TestBase):
+class CollisionTest(TestBase, Situation):
     def __init__(self):
-        super().__init__()
+        TestBase.__init__(self)
         self.conf = GridConfig(2, 2, 11, 0)
-        self.situation = CollisionSituation(self.conf)
+        Situation.__init__(self, self.conf)
+        self.situationObj = self
         self.shouldPass = False
-
-
-class CollisionSituation(Situation):
-    def __init__(self, conf):
-        super().__init__(conf)
 
     def situation(self, model, vars):
         mo = model
@@ -25,17 +21,13 @@ class CollisionSituation(Situation):
         mo.addConstr(go[(0,1), 'r', EAST, 0] == 1)
         mo.addConstr(go[(1,1), 'r', WEST, 0] == 1)
 
-class CollisionTest2(TestBase):
+class CollisionTest2(TestBase, Situation):
     def __init__(self):
-        super().__init__()
+        TestBase.__init__(self)
         self.conf = GridConfig(3, 2, 11, 0)
-        self.situation = CollisionSituation2(self.conf)
+        Situation.__init__(self, self.conf)
+        self.situationObj = self
         self.shouldPass = False
-
-
-class CollisionSituation2(Situation):
-    def __init__(self, conf):
-        super().__init__(conf)
 
     def situation(self, model, vars):
         mo = model

@@ -1,16 +1,12 @@
 from testbase import *
 
-class LiftAndMove(TestBase):
+class LiftAndMove(TestBase, Situation):
     def __init__(self):
-        super().__init__()
-        self.conf = GridConfig(3, 1, 20, 0)
-        self.situation = LiftAndMoveSit(self.conf)
+        TestBase.__init__(self)
+        self.conf = GridConfig(3, 1, 30, 0)
+        Situation.__init__(self, self.conf)
+        self.situationObj = self
         self.shouldPass = True
-
-
-class LiftAndMoveSit(Situation):
-    def __init__(self, conf):
-        super().__init__(conf)
 
     def situation(self, model, vars):
         mo = model
