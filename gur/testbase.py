@@ -4,8 +4,8 @@ from model import *
 from direction import *
 
 class TestBase:
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
+        self.name = type(self).__name__
         all_tests.append(self)
 
     def run(self):

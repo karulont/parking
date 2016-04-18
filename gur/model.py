@@ -242,6 +242,7 @@ class GurobiModel:
                 pass
 
 
+        """
         # dropping time constraint
         for v,w,t in itertools.product(nodes(), dropWhat, timeiter):
             if checkTime(t,2):
@@ -259,6 +260,7 @@ class GurobiModel:
                 mo.addConstr(nstat[v,'cr',t] +nstat[v,'rc',t+2] -drop[v,'cr',t] <= 1)
                 mo.addConstr(nstat[v,'cr',t+1] -drop[v,'cr',t] -nstat[v,'cr',t+2] <= 0)
                 mo.addConstr(-nstat[v,'rc',t+2] +drop[v,'cr',t] <= 0)
+        """
 
 
         mo.update()

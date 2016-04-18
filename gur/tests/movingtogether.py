@@ -2,7 +2,7 @@ from testbase import *
 
 class MovingTogether(TestBase):
     def __init__(self):
-        super().__init__('MovingTogether')
+        super().__init__()
         self.conf = GridConfig(4, 1, 11, 0)
         self.situation = MovingSituation(self.conf)
         self.shouldPass = True

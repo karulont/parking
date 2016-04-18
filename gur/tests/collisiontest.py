@@ -2,7 +2,7 @@ from testbase import *
 
 class CollisionTest(TestBase):
     def __init__(self):
-        super().__init__('CollisionTest')
+        super().__init__()
         self.conf = GridConfig(2, 2, 11, 0)
         self.situation = CollisionSituation(self.conf)
         self.shouldPass = False
@@ -27,7 +27,7 @@ class CollisionSituation(Situation):
 
 class CollisionTest2(TestBase):
     def __init__(self):
-        super().__init__('CollisionTest2')
+        super().__init__()
         self.conf = GridConfig(3, 2, 11, 0)
         self.situation = CollisionSituation2(self.conf)
         self.shouldPass = False
