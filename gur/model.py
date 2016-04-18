@@ -274,11 +274,10 @@ class GurobiModel:
         sit.objective(self.model, self.vars)
         self.model.update()
 
-    def checkStatus(self, fname):
-        if self.model.status == GRB.status.OPTIMAL:
-            return True
-        else:
-            self.model.computeIIS()
-            self.model.write(fname + '.ilp')
-            return False
+    def checkStatus(self):
+        return self.model.status == GRB.status.OPTIMAL
+
+    def findIIS(self, fname):
+        self.model.computeIIS()
+        self.model.write(fname + '.ilp')
 

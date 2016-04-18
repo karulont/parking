@@ -20,8 +20,11 @@ def runTests():
 
     print('\nChoose one to inspect!')
     index = sys.stdin.read(1)
-    # all_tests[int(index)-1].model.visualize()
-    Visualize(all_tests[int(index)-1].model)
+    test = all_tests[int(index)-1]
+    if test.model.checkStatus():
+        Visualize(test.model)
+    else:
+        test.model.findIIS(test.name)
 
 if __name__ == '__main__':
     runTests()
