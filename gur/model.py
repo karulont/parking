@@ -228,9 +228,9 @@ class GurobiModel:
                 SG0 = quicksum(gos)
                 #mo.addConstr(nstat[u,'e',t] -nstat[u,'e',t+1] -SCS0 +SG0 == 0)
 
-                #mo.addConstr(-nstat[u,'e',t+1] -SCS0 +SG0 <= 0)
-                mo.addConstr(-SCS0 <= 0)
-                mo.addConstr(-SG0 <= 0)
+                mo.addConstr(-nstat[u,'e',t+1] -SCS0 +SG0 <= 0) # only valid if w == 'r'
+                mo.addConstr(SCS0 <= 1)
+                mo.addConstr(SG0 <= 1)
                 mo.addConstr(nstat[u,'e',t+1] +SCS0 <= 1)
 
         # node status changes for car nodes
@@ -241,24 +241,30 @@ class GurobiModel:
         # dropping constraints
         for v,w,t in itertools.product(nodes(), dropWhat, timeiter):
             if checkTime(t,2):
+                # drop implies correct start node status
                 mo.addConstr(drop[v,w,t] -nstat[v,w,t] <= 0)
-                mo.addConstr(drop[v,w,t] -nstat[v,'lft',t+1] <= 0)
+                # drop implies intermediate node status
+                mo.addConstr(drop[v,w,t] -nstat[v,'drp',t+1] <= 0)
                 if w == 'cr':
                     ws = 'rc'
                 else:
                     raise Error('implement special')
+                # drop implies end node status
                 mo.addConstr(drop[v,w,t] -nstat[v,ws,t+2] <= 0)
 
         # lifting constraints
         for v,w,t in itertools.product(nodes(), liftWhat, timeiter):
             if checkTime(t,6):
+                # lift implies correct start node status
                 mo.addConstr(lift[v,w,t] -nstat[v,w,t] <= 0)
+                # lift implies intermediate node status
                 for i in range(1,6):
                     mo.addConstr(lift[v,w,t] -nstat[v,'lft',t+i] <= 0)
                 if w == 'rc':
                     ws = 'cr'
                 else:
                     raise Error('implement special')
+                # lift implies end node status
                 mo.addConstr(lift[v,w,t] -nstat[v,ws,t+6] <= 0)
 
         mo.update()
