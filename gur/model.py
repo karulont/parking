@@ -125,93 +125,61 @@ class GurobiModel:
         for u,w,d in itertools.product(nodes(), moveWhat, diriter):
             v = edg(u,d);
             vp = edg(v,d);
+            e = (u,v)
             if not checkNode(v):
                 # Off grid in that direction
                 continue
             for t in timeiter:
                 mo.addConstr(go[u,w,d,t] - nstat[u,w,t] <= 0)
+
                 if (d == NORTH or d == SOUTH) and (w == 'cr' or w in scrj):
                     # movement is slow and length is long
-                    if checkTime(t,5):
-                        e = (u,v)
-                        mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+4] -cont[u,w,d,t+4] +nstat[u,w,t] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+2] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+3] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+4] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+5] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+0] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+1] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+2] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+3] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+4] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+5] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,'e',t] <= 1)
-                        mo.addConstr(stop[u,w,d,t+4] -nstat[u,w,t] <= 0)
-                        mo.addConstr(cont[u,w,d,t+4] -nstat[u,w,t] <= 0)
-                        mo.addConstr(stop[u,w,d,t+4] -nstat[u,w,t+4] <= 0)
-                        mo.addConstr(cont[u,w,d,t+4] -nstat[u,w,t+4] <= 0)
-                        if not checkNode(vp):
-                            mo.addConstr(cont[u,w,d,t+4] == 0)
-                        elif checkTime(t,8):
-                            mo.addConstr(cont[v,w,d,t+8] + stop[v,w,d,t+8] -cont[u,w,d,t+4] == 0)
-                    if checkTime(t,-4):
-                        mo.addConstr(cont[u,w,d,t] +stop[u,w,d,t] -go[u,w,d,t-4] -cont[u,w,d,t-4] == 0)
-                    elif t < 4:
-                        # disable cont or stop because could not be given
-                        mo.addConstr(cont[u,w,d,t] == 0)
-                        mo.addConstr(stop[u,w,d,t] == 0)
+                    td = 5
                 elif (d == EAST or d == WEST) and (w == 'r' or w == 'rc' or w in rscj):
-                    ws,we = whatSE(w)
                     # movement fast and lenght short
-                    if checkTime(t,2):
-                        e = (u,v)
-                        mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+1] -cont[u,w,d,t+1] +nstat[u,w,t] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+2] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+0] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+1] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+2] <= 1)
-                        mo.addConstr(stop[u,w,d,t+1] -nstat[u,w,t] <= 0)
-                        mo.addConstr(cont[u,w,d,t+1] -nstat[u,w,t] <= 0)
-                        mo.addConstr(stop[u,w,d,t+1] -nstat[u,w,t+1] <= 0)
-                        mo.addConstr(cont[u,w,d,t+1] -nstat[u,w,t+1] <= 0)
-                        if not checkNode(vp):
-                            mo.addConstr(cont[u,w,d,t+1] == 0)
-                        elif checkTime(t,2):
-                            mo.addConstr(cont[vp,w,d,t+2] + stop[vp,w,d,t+2] -cont[u,w,d,t+1] == 0)
-                    if checkTime(t,-1):
-                        mo.addConstr(cont[u,w,d,t] +stop[u,w,d,t] -go[u,w,d,t-1] -cont[u,w,d,t-1] == 0)
-                    elif t < 1:
-                        # disable cont or stop because could not be given
-                        mo.addConstr(cont[u,w,d,t] == 0)
-                        mo.addConstr(stop[u,w,d,t] == 0)
+                    td = 2
                 else:
                     # movement fast and long or movement slow and short
-                    if checkTime(t,3):
-                        e = (u,v)
-                        mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+2] -cont[u,w,d,t+2] +nstat[u,w,t] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+1] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+2] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[v,w,t+3] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+0] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+1] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+2] <= 1)
-                        mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+3] <= 1)
-                        mo.addConstr(stop[u,w,d,t+2] -nstat[u,w,t] <= 0)
-                        mo.addConstr(cont[u,w,d,t+2] -nstat[u,w,t] <= 0)
-                        mo.addConstr(stop[u,w,d,t+2] -nstat[u,w,t+2] <= 0)
-                        mo.addConstr(cont[u,w,d,t+2] -nstat[u,w,t+2] <= 0)
-                        if not checkNode(vp):
-                            mo.addConstr(cont[u,w,d,t+2] == 0)
-                        elif checkTime(t,4):
-                            mo.addConstr(cont[v,w,d,t+4] + stop[v,w,d,t+4] -cont[u,w,d,t+2] == 0)
-                    if checkTime(t,-2):
-                        mo.addConstr(cont[u,w,d,t] +stop[u,w,d,t] -go[u,w,d,t-2] -cont[u,w,d,t-2] == 0)
-                    elif t < 2:
-                        # disable cont or stop because could not be given
-                        mo.addConstr(cont[u,w,d,t] == 0)
-                        mo.addConstr(stop[u,w,d,t] == 0)
+                    td = 3
+
+                if not checkTime(t,td):
+                    continue
+                td1 = td - 1
+                td2 = 2 * td1
+
+                # go implies stop or cont
+                mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+td1] -cont[u,w,d,t+td1] +nstat[u,w,t] <= 1)
+
+                # make sure edges are used
+                for i in range(td):
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+i] <= 1)
+                # make sure the node status remains same for duration of movement
+                for i in range(1,td1): # TODO: can try range(td1)
+                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+i] <= 1)
+
+                # not sure why this, but okay for now
+                # make sure that node status is the same for at stop and go time
+                mo.addConstr(stop[u,w,d,t+td1] -nstat[u,w,t] <= 0)
+                mo.addConstr(cont[u,w,d,t+td1] -nstat[u,w,t] <= 0)
+                mo.addConstr(stop[u,w,d,t+td1] -nstat[u,w,t+td1] <= 0)
+                mo.addConstr(cont[u,w,d,t+td1] -nstat[u,w,t+td1] <= 0)
+                # better for the last section
+                mo.addConstr(stop[u,w,d,t+td1] - go[u,w,d,t] <= 0)
+                mo.addConstr(cont[u,w,d,t+td1] - go[u,w,d,t] <= 0)
+                # (go or cont) implies (cont or stop)
+                mo.addConstr(go[u,w,d,t] +cont[u,w,d,t] -cont[u,w,d,t+td1] -stop[u,w,d,t+td1] == 0)
+
+                if not checkNode(vp):
+                    # if at edge, disable cont
+                    mo.addConstr(cont[u,w,d,td1] == 0)
+                elif checkTime(t,td2):
+                    # cont implies another (cont or stop)
+                    mo.addConstr(cont[v,w,d,t+td2] + stop[v,w,d,t+td2] -cont[u,w,d,t+td1] == 0)
+
+                if t < td1:
+                    # disable cont or stop because could not be given
+                    mo.addConstr(cont[u,w,d,t] == 0)
+                    mo.addConstr(stop[u,w,d,t] == 0)
 
         # node status changes constraints for empty node
         for u,t in itertools.product(nodes(), timeiter):
