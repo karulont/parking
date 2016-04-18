@@ -1,2 +1,4 @@
 *.log
 *.ilp
+*.swp
+__pycache__
