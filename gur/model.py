@@ -181,6 +181,39 @@ class GurobiModel:
                     mo.addConstr(cont[u,w,d,t] == 0)
                     mo.addConstr(stop[u,w,d,t] == 0)
 
+                # status of v at t+td
+                if w == 'r':
+                    us = 'e'
+                    vs = ['r', 'rc']
+                    vs1 = ['e', 'c']
+                elif w == 'rc':
+                    us = 'c'
+                    vs = ['r', 'rc']
+                    vs1 = ['e', 'c']
+                elif w == 'cr':
+                    us = 'e'
+                    vs = ['cr']
+                    vs1 = ['e']
+                else:
+                    raise Error('special cars not implemented!')
+
+                # (stop or cont) implies u status
+                mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nstat[u,us,t+td] <= 0)
+
+                # (stop or cont) implies v status
+                nst = []
+                for s in vs:
+                    nst.append(nstat[v,s,t+td])
+                nst = quicksum(nst)
+                mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nst <= 0)
+
+                # more specific v status
+                for i in range(len(vs)):
+                    mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -nstat[v,vs1[i],t+td1]
+                        +nstat[v,vs[i],t+td] <= 1)
+                    mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] +nstat[v,vs1[i],t+td1]
+                        -nstat[v,vs[i],t+td] <= 1)
+
         # node status changes constraints for empty node
         for u,t in itertools.product(nodes(), timeiter):
             if checkTime(t,1):
