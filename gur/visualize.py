@@ -115,10 +115,10 @@ class Visualize:
                     decision = 'CONT_{}{}'.format(td,w)
             for w in liftWhat:
                 if lift[v,w,t].x == 1:
-                    decision = 'LIFT'
+                    decision = 'LIFT_{}'.format(w)
             for w in dropWhat:
                 if drop[v,w,t].x == 1:
-                    decision = 'DROP'
+                    decision = 'DROP_{}'.format(w)
             self.canvas.itemconfig(self.nodeDecision[v], text=decision)
 
         for e in self.model.conf.edges():
