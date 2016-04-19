@@ -27,7 +27,7 @@ class Visualize:
 
     def key_released(self, event):
         if event.char == 'j':
-            if self.time < self.model.conf.maxt - 1:
+            if self.time < self.model.conf.maxt - 7:
                 self.time = self.time + 1
                 self.draw()
         elif event.char == 'k':

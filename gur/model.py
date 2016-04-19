@@ -211,32 +211,62 @@ class GurobiModel:
                     mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] +nstat[v,vs1[i],t+td1]
                         -nstat[v,vs[i],t+td] <= 1)
 
-        # node status changes constraints for empty node
-        for u,t in itertools.product(nodes(), timeiter):
-            if checkTime(t,1):
-                contOrStop = []
-                gos = []
-                for d,w in itertools.product(diriter, moveWhat):
-                    v = edg(u,d);
-                    if checkNode(v):
-                        contOrStop.append(cont[v,w,oppositeDir(d), t])
-                        contOrStop.append(stop[v,w,oppositeDir(d), t])
-                        gos.append(stop[u,w,d,t]);
-                        gos.append(cont[u,w,d,t]);
+        # general node status changes
+        for u,w,t in itertools.product(nodes(), what, timeiter):
+            if not checkTime(t,1):
+                continue
 
-                SCS0 = quicksum(contOrStop)
-                SG0 = quicksum(gos)
-                #mo.addConstr(nstat[u,'e',t] -nstat[u,'e',t+1] -SCS0 +SG0 == 0)
+            contOrStop = []
+            gos = []
 
-                mo.addConstr(-nstat[u,'e',t+1] -SCS0 +SG0 <= 0) # only valid if w == 'r'
-                mo.addConstr(SCS0 <= 1)
-                mo.addConstr(SG0 <= 1)
-                mo.addConstr(nstat[u,'e',t+1] +SCS0 <= 1)
+            if w == 'e':
+                wi = ['r','rc','cr']
+                wo = []
+            elif w == 'c':
+                wi = ['r', 'rc']
+                wo = []
+            elif w == 'r':
+                wi = []
+                wo = ['r']
+            elif w == 'rc':
+                wi = []
+                wo = ['r']
+                gos.append(lift[u,w,t])
+            elif w == 'cr':
+                wi = []
+                wo = ['cr']
+                gos.append(drop[u,w,t])
+            elif w == 'lft':
+                wi = []
+                wo = []
+                if checkTime(t,-5):
+                    for wl in liftWhat:
+                        contOrStop.append(lift[u,wl,t-5])
+            elif w == 'drp':
+                wi = []
+                wo = []
+                if checkTime(t,-1):
+                    for wd in dropWhat:
+                        contOrStop.append(drop[u,wd,t-1])
 
-        # node status changes for car nodes
-        for u,t in itertools.product(nodes(), timeiter):
-            if checkTime(t,1):
-                pass
+            for d,wt in itertools.product(diriter, wi):
+                v = edg(u,d);
+                if checkNode(v):
+                    contOrStop.append(cont[v,wt,oppositeDir(d), t])
+                    contOrStop.append(stop[v,wt,oppositeDir(d), t])
+            for d,wt in itertools.product(diriter, wo):
+                if checkNode(edg(u,d)):
+                    gos.append(stop[u,w,d,t]);
+                    gos.append(cont[u,w,d,t]);
+
+            SCS0 = quicksum(contOrStop)
+            SG0 = quicksum(gos)
+            mo.addConstr(nstat[u,w,t] -nstat[u,w,t+1] -SCS0 -SG0 <= 0)
+            mo.addConstr(nstat[u,w,t] -nstat[u,w,t+1] +SCS0 +SG0 <= 2)
+            mo.addConstr(SCS0 <= 1)
+            mo.addConstr(SG0 <= 1)
+            mo.addConstr(nstat[u,w,t+1] +SCS0 -SG0 <= 1)
+
 
         # dropping constraints
         for v,w,t in itertools.product(nodes(), dropWhat, timeiter):

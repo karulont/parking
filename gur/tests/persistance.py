@@ -23,6 +23,7 @@ class PersistanceNoRobots(TestBase, Situation):
     def objective(self, model, vars):
         for t in self.conf.timeiter:
             vars.nstat[(0,0),'r',t].obj = -4
+            vars.nstat[(1,0),'r',t].obj = -4
             for e in self.conf.edges():
                 vars.occu[e,t].obj = 1;
 
