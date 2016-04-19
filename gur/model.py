@@ -112,9 +112,10 @@ class GurobiModel:
         for v,t in itertools.product(nodes(), timeiter):
             s = []
             for d,w in itertools.product(diriter, moveWhat):
-                s.append(go[v,w,d,t])
-                s.append(stop[v,w,d,t])
-                s.append(cont[v,w,d,t])
+                if checkNode(edg(v,d)):
+                    s.append(go[v,w,d,t])
+                    s.append(stop[v,w,d,t])
+                    s.append(cont[v,w,d,t])
             for w in liftWhat:
                 s.append(lift[v,w,t])
             for w in dropWhat:

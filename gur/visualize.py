@@ -95,6 +95,7 @@ class Visualize:
         moveWhat = self.model.conf.moveWhat
         liftWhat = self.model.conf.liftWhat
         dropWhat = self.model.conf.dropWhat
+        conf=self.model.conf
 
         self.timeLabel.config(text = '%r' % self.time)
         t = self.time
@@ -106,13 +107,14 @@ class Visualize:
 
             decision = ''
             for d,w in itertools.product(diriter, moveWhat):
-                td = dir2c(d)
-                if go[v,w,d,t].x == 1:
-                    decision = 'GO_{}{}'.format(td,w)
-                if stop[v,w,d,t].x == 1:
-                    decision = 'STOP_{}{}'.format(td,w)
-                if cont[v,w,d,t].x == 1:
-                    decision = 'CONT_{}{}'.format(td,w)
+                if conf.checkNode(conf.edg(v,d)):
+                    td = dir2c(d)
+                    if go[v,w,d,t].x == 1:
+                        decision = 'GO_{}{}'.format(td,w)
+                    if stop[v,w,d,t].x == 1:
+                        decision = 'STOP_{}{}'.format(td,w)
+                    if cont[v,w,d,t].x == 1:
+                        decision = 'CONT_{}{}'.format(td,w)
             for w in liftWhat:
                 if lift[v,w,t].x == 1:
                     decision = 'LIFT_{}'.format(w)

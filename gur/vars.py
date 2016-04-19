@@ -23,9 +23,10 @@ class Vars():
 
         for v in conf.nodes():
             for w,d,t in itertools.product(conf.moveWhat, diriter, conf.timeiter):
-                addVar(go, "go", (v,w,d,t))
-                addVar(stop, "stop", (v,w,d,t))
-                addVar(cont, "cont", (v,w,d,t))
+                if conf.checkNode(conf.edg(v,d)):
+                    addVar(go, "go", (v,w,d,t))
+                    addVar(stop, "stop", (v,w,d,t))
+                    addVar(cont, "cont", (v,w,d,t))
             for w,t in itertools.product(conf.liftWhat, conf.timeiter):
                 addVar(lift, "lift", (v,w,t))
             for w,t in itertools.product(conf.dropWhat, conf.timeiter):
