@@ -40,9 +40,9 @@ class LiftAndMoveForced(TestBase, Situation):
         mo.addConstr(nstat[specifyNode(1,0), 'c', 0] == 1)
         mo.addConstr(nstat[specifyNode(2,0), 'rc', 0] == 1)
 
-        mo.addConstr(go[(2,0),'rc',WEST,0] == 1)
+        mo.addConstr(go[(2,0),'rc','W',0] == 1)
         mo.addConstr(vars.lift[(1,0),'rc',2] == 1)
-        mo.addConstr(go[(1,0),'cr',WEST,8] == 1)
+        mo.addConstr(go[(1,0),'cr','W',8] == 1)
         mo.addConstr(nstat[(0,0), 'e', 8] == 1)
 
     def objective(self, model, vars):

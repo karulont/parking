@@ -17,8 +17,8 @@ class MovingTogether(TestBase, Situation):
         mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
         mo.addConstr(nstat[specifyNode(1,0), 'r', 0] == 1)
         mo.addConstr(nstat[specifyNode(2,0), 'r', 0] == 1)
-        mo.addConstr(go[(1,0), 'r', WEST, 0] == 1)
-        mo.addConstr(go[(2,0), 'r', WEST, 0] == 1)
+        mo.addConstr(go[(1,0), 'r', 'W', 0] == 1)
+        mo.addConstr(go[(2,0), 'r', 'W', 0] == 1)
 
 
 MovingTogether()

@@ -68,15 +68,15 @@ class GridConfig:
             yield (x,y+1)
 
     def edg(self, node, d):
-        assert d >= 0 and d <= 3
+        assert d in diriter, "%r" % d
         x,y = node
-        if d == WEST: # west
+        if d == 'W': # west
             return (x - 1, y)
-        elif d == NORTH: # north
+        elif d == 'N': # north
             return (x, y - 1)
-        elif d == EAST:
+        elif d == 'E':
             return (x+1, y)
-        elif d == SOUTH:
+        elif d == 'S':
             return (x, y + 1)
 
     def checkNode(self, node):

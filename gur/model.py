@@ -133,10 +133,10 @@ class GurobiModel:
             for t in timeiter:
                 mo.addConstr(go[u,w,d,t] - nstat[u,w,t] <= 0)
 
-                if (d == NORTH or d == SOUTH) and (w == 'cr' or w in scrj):
+                if (d == 'N' or d == 'S') and (w == 'cr' or w in scrj):
                     # movement is slow and length is long
                     td = 5
-                elif (d == EAST or d == WEST) and (w == 'r' or w == 'rc' or w in rscj):
+                elif (d == 'E' or d == 'W') and (w == 'r' or w == 'rc' or w in rscj):
                     # movement fast and lenght short
                     td = 2
                 else:

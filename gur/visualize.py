@@ -108,13 +108,12 @@ class Visualize:
             decision = ''
             for d,w in itertools.product(diriter, moveWhat):
                 if conf.checkNode(conf.edg(v,d)):
-                    td = dir2c(d)
                     if go[v,w,d,t].x == 1:
-                        decision = 'GO_{}{}'.format(td,w)
+                        decision = 'GO_{}{}'.format(d,w)
                     if stop[v,w,d,t].x == 1:
-                        decision = 'STOP_{}{}'.format(td,w)
+                        decision = 'STOP_{}{}'.format(d,w)
                     if cont[v,w,d,t].x == 1:
-                        decision = 'CONT_{}{}'.format(td,w)
+                        decision = 'CONT_{}{}'.format(d,w)
             for w in liftWhat:
                 if lift[v,w,t].x == 1:
                     decision = 'LIFT_{}'.format(w)
