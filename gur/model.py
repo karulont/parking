@@ -94,19 +94,15 @@ class GurobiModel:
         for v,d,t in itertools.product(nodes(), diriter, timeiter):
             s = []
             u = edg(v,d)
-            try:
-                s.append(occu[u,v,t])
-                try:
-                    s.append(occu[v,edg(v,(d - 1) % 4),t])
-                except KeyError:
-                    pass
-                try:
-                    s.append(occu[v,edg(v,(d + 1) % 4),t])
-                except KeyError:
-                    pass
-                mo.addConstr(quicksum(s) <= 1)
-            except KeyError:
-                pass
+            if checkEdge((u,v)):
+                s.append(occu[(u,v),t])
+            e = (v,edg(v,dirPlus1[d]))
+            if checkEdge(e):
+                s.append(occu[e,t])
+            e = (v,edg(v,dirMinus1[d]))
+            if checkEdge(e):
+                s.append(occu[e,t])
+            mo.addConstr(quicksum(s) <= 1)
 
         # no more than one decision per node per timestep
         for v,t in itertools.product(nodes(), timeiter):

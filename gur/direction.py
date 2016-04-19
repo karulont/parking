@@ -10,4 +10,7 @@ def oppositeDir(d):
     else:
         raise Error('Unknown dir')
 
+dirPlus1 = {'N':'E', 'E':'S', 'S':'W', 'W':'N'}
+dirMinus1 = {'N':'W', 'E':'N', 'S':'E', 'W':'S'}
+
 diriter = {'N','E','S','W'}
