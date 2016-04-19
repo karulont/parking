@@ -12,12 +12,7 @@ class TestBase:
         model = GurobiModel(self.conf)
         model.setSituation(self.situationObj)
         model.optimize()
-        passed = model.checkStatus()
-        if passed == self.shouldPass:
-            print('Test %r successful.' % self.name)
-        else:
-            print('Test %r failed!' % self.name)
-
+        self.passed = model.checkStatus()
         # for future reference
         self.model = model
 
