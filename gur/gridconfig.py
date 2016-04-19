@@ -15,9 +15,25 @@ class GridConfig:
         self.dropWhat = set(['cr']).union(self.scrj)
         self.timeiter = range(maxt)
 
+        self.nodeStatusIO = self.makeNodeStatusIO()
+
         # set of nodes and edges for fast in check
         self.nodeSet = set(self.nodes())
         self.edgeSet = set(self.edges())
+
+    def makeNodeStatusIO(self):
+        sio = {}
+        sio['e'] = (self.moveWhat, set())
+        for w in set('c').union(self.scj):
+            sio[w] = (set(['r','rc']).union(self.rscj), set())
+        sio['r'] = (set(), set('r'))
+        for w in self.liftWhat:
+            sio[w] = (set(), set('r'))
+        for w in self.dropWhat:
+            sio[w] = (set(), set([w]))
+        sio['lft'] = (set(), set())
+        sio['drp'] = (set(), set())
+        return sio
 
     def _makeWhat(self):
         what = set()

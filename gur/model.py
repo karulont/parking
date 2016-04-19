@@ -236,32 +236,16 @@ class GurobiModel:
             more = []
             away = []
 
-            if w == 'e':
-                wi = ['r','rc','cr']
-                wo = []
-            elif w == 'c':
-                wi = ['r', 'rc']
-                wo = []
-            elif w == 'r':
-                wi = []
-                wo = ['r']
-            elif w == 'rc':
-                wi = []
-                wo = ['r']
+            (wi, wo) = self.conf.nodeStatusIO[w]
+            if w == 'rc':
                 away.append(lift[u,w,t])
             elif w == 'cr':
-                wi = []
-                wo = ['cr']
                 away.append(drop[u,w,t])
             elif w == 'lft':
-                wi = []
-                wo = []
                 if checkTime(t,-5):
                     for wl in liftWhat:
                         more.append(lift[u,wl,t-5])
             elif w == 'drp':
-                wi = []
-                wo = []
                 if checkTime(t,-1):
                     for wd in dropWhat:
                         more.append(drop[u,wd,t-1])
