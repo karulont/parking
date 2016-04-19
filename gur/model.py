@@ -217,8 +217,8 @@ class GurobiModel:
             if not checkTime(t,1):
                 continue
 
-            contOrStop = []
-            gos = []
+            more = []
+            away = []
 
             if w == 'e':
                 wi = ['r','rc','cr']
@@ -232,41 +232,41 @@ class GurobiModel:
             elif w == 'rc':
                 wi = []
                 wo = ['r']
-                gos.append(lift[u,w,t])
+                away.append(lift[u,w,t])
             elif w == 'cr':
                 wi = []
                 wo = ['cr']
-                gos.append(drop[u,w,t])
+                away.append(drop[u,w,t])
             elif w == 'lft':
                 wi = []
                 wo = []
                 if checkTime(t,-5):
                     for wl in liftWhat:
-                        contOrStop.append(lift[u,wl,t-5])
+                        more.append(lift[u,wl,t-5])
             elif w == 'drp':
                 wi = []
                 wo = []
                 if checkTime(t,-1):
                     for wd in dropWhat:
-                        contOrStop.append(drop[u,wd,t-1])
+                        more.append(drop[u,wd,t-1])
 
             for d,wt in itertools.product(diriter, wi):
                 v = edg(u,d);
                 if checkNode(v):
-                    contOrStop.append(cont[v,wt,oppositeDir(d), t])
-                    contOrStop.append(stop[v,wt,oppositeDir(d), t])
+                    more.append(cont[v,wt,oppositeDir(d), t])
+                    more.append(stop[v,wt,oppositeDir(d), t])
             for d,wt in itertools.product(diriter, wo):
                 if checkNode(edg(u,d)):
-                    gos.append(stop[u,w,d,t]);
-                    gos.append(cont[u,w,d,t]);
+                    away.append(stop[u,w,d,t]);
+                    away.append(cont[u,w,d,t]);
 
-            SCS0 = quicksum(contOrStop)
-            SG0 = quicksum(gos)
-            mo.addConstr(nstat[u,w,t] -nstat[u,w,t+1] -SCS0 -SG0 <= 0)
-            mo.addConstr(nstat[u,w,t] -nstat[u,w,t+1] +SCS0 +SG0 <= 2)
-            mo.addConstr(SCS0 <= 1)
-            mo.addConstr(SG0 <= 1)
-            mo.addConstr(nstat[u,w,t+1] +SCS0 -SG0 <= 1)
+            more = quicksum(more)
+            away = quicksum(away)
+            mo.addConstr(nstat[u,w,t] -nstat[u,w,t+1] -more -away <= 0)
+            mo.addConstr(nstat[u,w,t] -nstat[u,w,t+1] +more +away <= 2)
+            mo.addConstr(more <= 1)
+            mo.addConstr(away <= 1)
+            mo.addConstr(nstat[u,w,t+1] +more -away <= 1)
 
 
         # dropping constraints
