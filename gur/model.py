@@ -195,8 +195,24 @@ class GurobiModel:
                 else:
                     raise Error('special cars not implemented!')
 
+                # construct set of things, which could move at same time
+                sameTime = [w] # TODO: special car support
+
+                up = edg(u,oppositeDir(d))
+                umore = []
+                vmore = []
+                for ws in sameTime:
+                    if checkNode(up):
+                        umore.append(cont[up,ws,d,t+td1])
+                        umore.append(stop[up,ws,d,t+td1])
+                    if checkNode(edg(v,d)):
+                        vmore.append(cont[v,ws,d,t+td1])
+                        vmore.append(stop[v,ws,d,t+td1])
+                umore = quicksum(umore)
+                vmore = quicksum(vmore)
+
                 # (stop or cont) implies u status
-                mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nstat[u,us,t+td] <= 0)
+                mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nstat[u,us,t+td] -umore <= 0)
 
                 # (stop or cont) implies v status
                 nst = []
@@ -208,9 +224,9 @@ class GurobiModel:
                 # more specific v status
                 for i in range(len(vs)):
                     mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -nstat[v,vs1[i],t+td1]
-                        +nstat[v,vs[i],t+td] <= 1)
+                        +nstat[v,vs[i],t+td] -vmore <= 1)
                     mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] +nstat[v,vs1[i],t+td1]
-                        -nstat[v,vs[i],t+td] <= 1)
+                        -nstat[v,vs[i],t+td] -vmore <= 1)
 
         # general node status changes
         for u,w,t in itertools.product(nodes(), what, timeiter):
