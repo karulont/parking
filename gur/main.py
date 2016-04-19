@@ -7,12 +7,7 @@ from visualize import Visualize
 import sys
 
 def main():
-    conf = GridConfig(3, 2, 11, 0)
-    sit = Situation(conf)
-    model = GurobiModel(conf)
-    model.setSituation(sit)
-    model.optimize()
-    model.visualize()
+    pass
 
 def runTests():
     for i,t in enumerate(all_tests):
