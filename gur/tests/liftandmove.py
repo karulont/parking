@@ -73,5 +73,31 @@ class LiftAndMoveForced(TestBase, Situation):
 
         return all(conditions)
 
+class LiftAndMove3(TestBase, Situation):
+    def __init__(self):
+        TestBase.__init__(self)
+        self.conf = GridConfig(3, 2, 30, 1)
+        Situation.__init__(self, self.conf)
+        self.situationObj = self
+        self.shouldPass = True
+
+    def situation(self, model, vars):
+        mo = model
+        specifyNode = self.specifyNode
+        nstat = vars.nstat
+        go = vars.go
+
+        mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,0), 'sc0', 0] == 1)
+        mo.addConstr(nstat[specifyNode(2,0), 'rc', 0] == 1)
+        mo.addConstr(nstat[specifyNode(0,1), 'c', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,1), 'r', 0] == 1)
+        mo.addConstr(nstat[specifyNode(2,1), 'e', 0] == 1)
+
+    def objective(self, model, vars):
+        for t in self.conf.timeiter:
+            vars.nstat[(0,1),'sc0',t].obj = -1
+
 LiftAndMove()
 LiftAndMoveForced()
+#LiftAndMove3()
