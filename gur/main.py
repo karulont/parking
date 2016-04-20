@@ -19,7 +19,7 @@ def runTests():
 
 
     print('\nChoose one to inspect!')
-    index = sys.stdin.read(1)
+    index = sys.stdin.readline()
     test = all_tests[int(index)-1]
     if test.model.checkStatus():
         Visualize(test.model)

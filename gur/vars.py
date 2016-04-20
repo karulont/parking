@@ -7,8 +7,10 @@ class Vars():
         nstat = {}
         occu = {}
 
+        whats = conf.whats
+
         for (x,y),t in itertools.product(conf.nodes(), conf.timeiter):
-            for w in conf.what:
+            for w in whats.what:
                 addVar(nstat, "nstat", ((x,y), w, t))
 
         for e,t in itertools.product(conf.edges(), conf.timeiter):
@@ -22,14 +24,14 @@ class Vars():
         drop = {}
 
         for v in conf.nodes():
-            for w,d,t in itertools.product(conf.moveWhat, diriter, conf.timeiter):
+            for w,d,t in itertools.product(whats.moveWhat, diriter, conf.timeiter):
                 if conf.checkNode(conf.edg(v,d)):
                     addVar(go, "go", (v,w,d,t))
                     addVar(stop, "stop", (v,w,d,t))
                     addVar(cont, "cont", (v,w,d,t))
-            for w,t in itertools.product(conf.liftWhat, conf.timeiter):
+            for w,t in itertools.product(whats.liftWhat, conf.timeiter):
                 addVar(lift, "lift", (v,w,t))
-            for w,t in itertools.product(conf.dropWhat, conf.timeiter):
+            for w,t in itertools.product(whats.dropWhat, conf.timeiter):
                 addVar(drop, "drop", (v,w,t))
 
         # assing to instance

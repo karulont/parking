@@ -20,7 +20,7 @@ class LiftAndMove(TestBase, Situation):
 
     def objective(self, model, vars):
         for t in self.conf.timeiter:
-            vars.lift[(0,0),'rc',t].obj = -1
+            vars.nstat[(0,0),'rc',t].obj = -1
 
     def checkSolution(self, vars):
         nstat = vars.nstat

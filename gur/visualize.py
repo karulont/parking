@@ -91,10 +91,10 @@ class Visualize:
         lift = self.model.vars.lift
         drop = self.model.vars.drop
 
-        what = self.model.conf.what
-        moveWhat = self.model.conf.moveWhat
-        liftWhat = self.model.conf.liftWhat
-        dropWhat = self.model.conf.dropWhat
+        what = self.model.conf.whats.what
+        moveWhat = self.model.conf.whats.moveWhat
+        liftWhat = self.model.conf.whats.liftWhat
+        dropWhat = self.model.conf.whats.dropWhat
         conf=self.model.conf
 
         self.timeLabel.config(text = '%r' % self.time)

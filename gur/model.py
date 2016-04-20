@@ -32,17 +32,8 @@ class GurobiModel:
         edg = self.conf.edg
         neighbours = self.conf.neighbours
         timeiter = self.conf.timeiter
-        what = self.conf.what
-        scj = self.conf.scj
-        rscj = self.conf.rscj
-        scrj = self.conf.scrj
-        slftj = self.conf.slftj
-        sdrpj = self.conf.sdrpj
-        moveWhat = self.conf.moveWhat
-        liftWhat = self.conf.liftWhat
-        dropWhat = self.conf.dropWhat
+        whats = self.conf.whats
 
-        removeRobotWhat = self.conf.removeRobotWhat
         checkNode = self.conf.checkNode
         checkEdge = self.conf.checkEdge
         checkTime = self.conf.checkTime
@@ -59,7 +50,7 @@ class GurobiModel:
         mo.update()
 
         # important: at time 0 everything is still so do not allow continue or stop
-        for u,w,d in itertools.product(self.conf.nodes(), self.conf.moveWhat, diriter):
+        for u,w,d in itertools.product(self.conf.nodes(), whats.moveWhat, diriter):
             v = self.conf.edg(u,d);
             if not self.conf.checkNode(v):
                 # Off grid in that direction
@@ -74,7 +65,7 @@ class GurobiModel:
 
         # one status per node per timestep
         for v,t in itertools.product(nodes(), timeiter):
-            s = [nstat[v,w,t] for w in what]
+            s = [nstat[v,w,t] for w in whats.what]
             mo.addConstr(quicksum(s) == 1)
 
         # edge can be used once per timestep
@@ -108,19 +99,19 @@ class GurobiModel:
         # no more than one decision per node per timestep
         for v,t in itertools.product(nodes(), timeiter):
             s = []
-            for d,w in itertools.product(diriter, moveWhat):
+            for d,w in itertools.product(diriter, whats.moveWhat):
                 if checkNode(edg(v,d)):
                     s.append(go[v,w,d,t])
                     s.append(stop[v,w,d,t])
                     s.append(cont[v,w,d,t])
-            for w in liftWhat:
+            for w in whats.liftWhat:
                 s.append(lift[v,w,t])
-            for w in dropWhat:
+            for w in whats.dropWhat:
                 s.append(drop[v,w,t])
             mo.addConstr(quicksum(s) <= 1)
 
         # robot movements
-        for u,w,d in itertools.product(nodes(), moveWhat, diriter):
+        for u,w,d in itertools.product(nodes(), whats.moveWhat, diriter):
             v = edg(u,d);
             vp = edg(v,d);
             e = (u,v)
@@ -130,10 +121,10 @@ class GurobiModel:
             for t in timeiter:
                 mo.addConstr(go[u,w,d,t] - nstat[u,w,t] <= 0)
 
-                if (d == 'N' or d == 'S') and (w == 'cr' or w in scrj):
+                if (d == 'N' or d == 'S') and (w in whats.dropWhat):
                     # movement is slow and length is long
                     td = 5
-                elif (d == 'E' or d == 'W') and (w == 'r' or w == 'rc' or w in rscj):
+                elif (d == 'E' or d == 'W') and (w in whats.robotsWhat):
                     # movement fast and lenght short
                     td = 2
                 else:
@@ -184,27 +175,28 @@ class GurobiModel:
                     for i in range(self.conf.K):
                         vs.append('rsc' + str(i))
                         vs1.append('sc' + str(i))
-                elif w in liftWhat:
-                    us = removeRobotWhat(w)
+                elif w in whats.liftWhat:
+                    us = whats.removeRobotWhat[w]
                     vs = ['r', 'rc']
                     vs1 = ['e', 'c']
                     for i in range(self.conf.K):
                         vs.append('rsc' + str(i))
                         vs1.append('sc' + str(i))
-                elif w in dropWhat:
+                elif w in whats.dropWhat:
                     us = 'e'
                     vs = [w]
                     vs1 = ['e']
                 else:
-                    assert False, 'w = %r, liftWhat=%r' % (w, self.conf.liftWhat)
+                    assert False, 'w = %r, liftWhat=%r' % (w, whats.liftWhat)
 
                 # construct set of things, which could move at same time
+                # TODO: look this over
                 if w == 'r':
-                    sameTime = moveWhat
-                elif w in liftWhat:
-                    sameTime = liftWhat.union(set(['r']))
-                elif w in dropWhat:
-                    sameTime = dropWhat
+                    sameTime = whats.moveWhat
+                elif w in whats.liftWhat:
+                    sameTime = whats.robotsWhat
+                elif w in whats.dropWhat:
+                    sameTime = whats.dropWhat
 
                 up = edg(u,oppositeDir(d))
                 umore = []
@@ -237,25 +229,25 @@ class GurobiModel:
                         -nstat[v,vs[i],t+td] -vmore <= 1)
 
         # general node status changes
-        for u,w,t in itertools.product(nodes(), what, timeiter):
+        for u,w,t in itertools.product(nodes(), whats.what, timeiter):
             if not checkTime(t,1):
                 continue
 
             more = []
             away = []
 
-            (wi, wo) = self.conf.nodeStatusIO[w]
-            if w in liftWhat:
+            (wi, wo) = whats.nodeStatusIO[w]
+            if w in whats.liftWhat:
                 away.append(lift[u,w,t])
-            elif w in dropWhat:
+            elif w in whats.dropWhat:
                 away.append(drop[u,w,t])
-            elif w in set(['lft']).union(slftj):
+            elif w in whats.allLiftWhat:
                 if checkTime(t,-5):
-                    for wl in liftWhat:
+                    for wl in whats.liftWhat:
                         more.append(lift[u,wl,t-5])
-            elif w in set(['drp']).union(sdrpj):
+            elif w in whats.allDropWhat:
                 if checkTime(t,-1):
-                    for wd in dropWhat:
+                    for wd in whats.dropWhat:
                         more.append(drop[u,wd,t-1])
 
             for d,wt in itertools.product(diriter, wi):
@@ -278,25 +270,25 @@ class GurobiModel:
 
 
         # dropping constraints
-        for v,w,t in itertools.product(nodes(), dropWhat, timeiter):
+        for v,w,t in itertools.product(nodes(), whats.dropWhat, timeiter):
             if checkTime(t,2):
                 # drop implies correct start node status
                 mo.addConstr(drop[v,w,t] -nstat[v,w,t] <= 0)
                 # drop implies intermediate node status
                 mo.addConstr(drop[v,w,t] -nstat[v,'drp',t+1] <= 0)
-                ws = self.conf.dropWhatHelper[w]
+                ws = whats.dropWhatHelper[w]
                 # drop implies end node status
                 mo.addConstr(drop[v,w,t] -nstat[v,ws,t+2] <= 0)
 
         # lifting constraints
-        for v,w,t in itertools.product(nodes(), liftWhat, timeiter):
+        for v,w,t in itertools.product(nodes(), whats.liftWhat, timeiter):
             if checkTime(t,6):
                 # lift implies correct start node status
                 mo.addConstr(lift[v,w,t] -nstat[v,w,t] <= 0)
                 # lift implies intermediate node status
                 for i in range(1,6):
                     mo.addConstr(lift[v,w,t] -nstat[v,'lft',t+i] <= 0)
-                ws = self.conf.dropWhatHelper[w]
+                ws = whats.dropWhatHelper[w]
                 # lift implies end node status
                 mo.addConstr(lift[v,w,t] -nstat[v,ws,t+6] <= 0)
 

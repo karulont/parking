@@ -55,7 +55,7 @@ class Situation():
         costvars = set()
         
         v = (0,0) # node where to dropoff cars
-        for w,t in itertools.product(self.conf.scj, self.conf.timeiter):
+        for w,t in itertools.product(self.conf.whats.scj, self.conf.timeiter):
             #costvars.add(nstat[v,w,t])
             pass
         # drop car TODO: temporary
