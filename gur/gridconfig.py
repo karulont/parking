@@ -16,10 +16,20 @@ class GridConfig:
         self.timeiter = range(maxt)
 
         self.nodeStatusIO = self.makeNodeStatusIO()
+        self.dropWhatHelper = self.makeDropWhatHelper()
 
         # set of nodes and edges for fast in check
         self.nodeSet = set(self.nodes())
         self.edgeSet = set(self.edges())
+
+    def makeDropWhatHelper(self):
+        dwh = {}
+        dwh['cr'] = 'rc'
+        dwh['rc'] = 'cr'
+        for i in range(self.K):
+            dwh['scr'+str(i)] = 'rsc'+str(i)
+            dwh['rsc'+str(i)] = 'scr'+str(i)
+        return dwh
 
     def makeNodeStatusIO(self):
         sio = {}
@@ -31,8 +41,10 @@ class GridConfig:
             sio[w] = (set(), set('r'))
         for w in self.dropWhat:
             sio[w] = (set(), set([w]))
-        sio['lft'] = (set(), set())
-        sio['drp'] = (set(), set())
+        for w in set(['lft']).union(self.slftj):
+            sio[w] = (set(), set())
+        for w in set(['drp']).union(self.sdrpj):
+            sio[w] = (set(), set())
         return sio
 
     def _makeWhat(self):
@@ -62,6 +74,12 @@ class GridConfig:
 
         what = what.union(scj,rscj,scrj,slftj,sdrpj)
         return what, scj, rscj, scrj, slftj, sdrpj
+
+    def removeRobotWhat(self, what):
+        if what in self.liftWhat:
+            return what[1:]
+        else:
+            raise Error('asd')
 
     def nodes(self):
         return itertools.product(range(self.xsize),range(self.ysize))

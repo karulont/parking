@@ -42,6 +42,7 @@ class GurobiModel:
         liftWhat = self.conf.liftWhat
         dropWhat = self.conf.dropWhat
 
+        removeRobotWhat = self.conf.removeRobotWhat
         checkNode = self.conf.checkNode
         checkEdge = self.conf.checkEdge
         checkTime = self.conf.checkTime
@@ -180,19 +181,30 @@ class GurobiModel:
                     us = 'e'
                     vs = ['r', 'rc']
                     vs1 = ['e', 'c']
-                elif w == 'rc':
-                    us = 'c'
+                    for i in range(self.conf.K):
+                        vs.append('rsc' + str(i))
+                        vs1.append('sc' + str(i))
+                elif w in liftWhat:
+                    us = removeRobotWhat(w)
                     vs = ['r', 'rc']
                     vs1 = ['e', 'c']
-                elif w == 'cr':
+                    for i in range(self.conf.K):
+                        vs.append('rsc' + str(i))
+                        vs1.append('sc' + str(i))
+                elif w in dropWhat:
                     us = 'e'
-                    vs = ['cr']
+                    vs = [w]
                     vs1 = ['e']
                 else:
-                    raise Error('special cars not implemented!')
+                    assert False, 'w = %r, liftWhat=%r' % (w, self.conf.liftWhat)
 
                 # construct set of things, which could move at same time
-                sameTime = [w] # TODO: special car support
+                if w == 'r':
+                    sameTime = moveWhat
+                elif w in liftWhat:
+                    sameTime = liftWhat.union(set(['r']))
+                elif w in dropWhat:
+                    sameTime = dropWhat
 
                 up = edg(u,oppositeDir(d))
                 umore = []
@@ -233,15 +245,15 @@ class GurobiModel:
             away = []
 
             (wi, wo) = self.conf.nodeStatusIO[w]
-            if w == 'rc':
+            if w in liftWhat:
                 away.append(lift[u,w,t])
-            elif w == 'cr':
+            elif w in dropWhat:
                 away.append(drop[u,w,t])
-            elif w == 'lft':
+            elif w in set(['lft']).union(slftj):
                 if checkTime(t,-5):
                     for wl in liftWhat:
                         more.append(lift[u,wl,t-5])
-            elif w == 'drp':
+            elif w in set(['drp']).union(sdrpj):
                 if checkTime(t,-1):
                     for wd in dropWhat:
                         more.append(drop[u,wd,t-1])
@@ -272,10 +284,7 @@ class GurobiModel:
                 mo.addConstr(drop[v,w,t] -nstat[v,w,t] <= 0)
                 # drop implies intermediate node status
                 mo.addConstr(drop[v,w,t] -nstat[v,'drp',t+1] <= 0)
-                if w == 'cr':
-                    ws = 'rc'
-                else:
-                    raise Error('implement special')
+                ws = self.conf.dropWhatHelper[w]
                 # drop implies end node status
                 mo.addConstr(drop[v,w,t] -nstat[v,ws,t+2] <= 0)
 
@@ -287,10 +296,7 @@ class GurobiModel:
                 # lift implies intermediate node status
                 for i in range(1,6):
                     mo.addConstr(lift[v,w,t] -nstat[v,'lft',t+i] <= 0)
-                if w == 'rc':
-                    ws = 'cr'
-                else:
-                    raise Error('implement special')
+                ws = self.conf.dropWhatHelper[w]
                 # lift implies end node status
                 mo.addConstr(lift[v,w,t] -nstat[v,ws,t+6] <= 0)
 
