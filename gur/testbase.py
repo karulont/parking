@@ -13,7 +13,16 @@ class TestBase:
         model.setSituation(self.situationObj)
         model.optimize()
         self.passed = model.checkStatus()
+        self.checked = False
+        if self.passed:
+            self.checked = self.checkSolution(model.vars)
+            self.overall = self.checked and self.shouldPass
+        else:
+            self.overall = not self.shouldPass
         # for future reference
         self.model = model
+
+    def checkSolution(self, vars):
+        return True
 
 all_tests = list()
