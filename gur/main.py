@@ -13,8 +13,8 @@ def runTests():
     for i,t in enumerate(all_tests):
         i = i + 1
         t.run()
-        print('%r) Test %r should pass = %r, test passed = %r, checked = %r, overall = %s!'
-                % (i,t.name, t.shouldPass, t.passed, t.checked,
+        print('%r) Test %r (%r s) should pass = %r, test passed = %r, checked = %r, overall = %s!'
+                % (i,t.name, t.time, t.shouldPass, t.passed, t.checked,
                     'success' if t.overall else 'fail'))
 
 

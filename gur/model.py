@@ -12,6 +12,8 @@ class GurobiModel:
         self.conf = conf
         self.model = Model("parking")
         self.model.params.LogToConsole = False
+        self.model.params.Heuristics = 0.9
+        self.model.params.Cuts = 0
 
         def addFunc(set, setname, key):
             set[key] = self.model.addVar(vtype = GRB.BINARY,

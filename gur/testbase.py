@@ -9,18 +9,17 @@ class TestBase:
         all_tests.append(self)
 
     def run(self):
-        model = GurobiModel(self.conf)
-        model.setSituation(self.situationObj)
-        model.optimize()
-        self.passed = model.checkStatus()
+        self.model = GurobiModel(self.conf)
+        self.model.setSituation(self.situationObj)
+        self.model.optimize()
+        self.passed = self.model.checkStatus()
         self.checked = False
         if self.passed:
-            self.checked = self.checkSolution(model.vars)
+            self.checked = self.checkSolution(self.model.vars)
             self.overall = self.checked and self.shouldPass
         else:
             self.overall = not self.shouldPass
-        # for future reference
-        self.model = model
+        self.time = format(self.model.model.getAttr('Runtime'), '.2f')
 
     def checkSolution(self, vars):
         return True

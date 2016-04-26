@@ -27,4 +27,28 @@ class LargeTest(TestBase, Situation):
             vars.nstat[(1,1),'r',t].obj = -1
             vars.nstat[(1,0),'sc0',t].obj = -1
 
+class Puzzle(TestBase, Situation):
+    def __init__(self):
+        TestBase.__init__(self)
+        self.conf = GridConfig(3, 3, 30, 0)
+        Situation.__init__(self, self.conf)
+        self.situationObj = self
+        self.shouldPass = True
+
+    def situation(self, model, vars):
+        mo = model
+        specifyNode = self.specifyNode
+        nstat = vars.nstat
+        go = vars.go
+
+        mo.addConstr(nstat[specifyNode(2,2), 'r', 0] == 1)
+        # all other nodes filled with empty
+        for v in set(self.conf.nodes()).difference(self.definedNodes):
+            mo.addConstr(nstat[v, 'c', 0] == 1)
+
+    def objective(self, model, vars):
+        for t in self.conf.timeiter:
+            vars.nstat[(0,0),'e',t].obj = -1
+
 LargeTest()
+Puzzle()
