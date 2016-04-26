@@ -13,6 +13,7 @@ class NodeStatuses:
         self.nodeStatusIO = self.makeNodeStatusIO()
         self.removeRobotWhat = makeRemoveRobotWhat(self.K)
         self.dropWhatHelper = makeDropWhatHelper(self.K)
+        self.usPlusWs = makeUsPlusWs(self.K)
 
     def makeNodeStatusIO(self):
         sio = {}
@@ -84,3 +85,24 @@ def makeRemoveRobotWhat(K):
         what[s] = 'e'
     return what
 
+def makeUsPlusWs(K):
+    what = {}
+    whate = {}
+    what['e'] = {'r':'r', 'rc':'r', 'cr':'cr'}
+    what['c'] = {'r':'rc', 'rc':'rc'}
+    for i in range(K):
+        c = 'sc' + str(i)
+        rc = 'rsc' + str(i)
+        cr = 'scr' + str(i)
+        what['e'][rc] = 'r'
+        what['e'][cr] = cr
+        what['c'][rc] = 'rc'
+        what[c] = {'r':rc, 'rc':rc}
+    for i in range(K):
+        c = 'sc' + str(i)
+        rc = 'rsc' + str(i)
+        for j in range(K):
+            rc1 = 'rsc' + str(j)
+            what[c][rc1] = rc
+
+    return what

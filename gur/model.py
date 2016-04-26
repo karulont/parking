@@ -143,7 +143,7 @@ class GurobiModel:
                 for i in range(td+1):
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+i] <= 1)
                 # make sure the node status remains same for duration of movement
-                for i in range(1,td): # TODO: can try range(td1)
+                for i in range(1,td):
                     mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+i] <= 1)
 
                 # not sure why this, but okay for now
@@ -192,20 +192,24 @@ class GurobiModel:
                 # construct set of things, which could move at same time
                 # TODO: look this over
                 if w == 'r':
-                    sameTime = whats.moveWhat
+                    behind = whats.moveWhat
+                    infront = whats.robotsWhat
                 elif w in whats.liftWhat:
-                    sameTime = whats.robotsWhat
+                    behind = whats.robotsWhat
+                    infront = whats.robotsWhat
                 elif w in whats.dropWhat:
-                    sameTime = whats.dropWhat
+                    behind = whats.dropWhat
+                    infront = whats.moveWhat
 
                 up = edg(u,oppositeDir(d))
                 umore = []
                 vmore = []
-                for ws in sameTime:
-                    if checkNode(up):
+                if checkNode(up):
+                    for ws in behind:
                         umore.append(cont[up,ws,d,t+td1])
                         umore.append(stop[up,ws,d,t+td1])
-                    if checkNode(edg(v,d)):
+                if checkNode(vp):
+                    for ws in infront:
                         vmore.append(cont[v,ws,d,t+td1])
                         vmore.append(stop[v,ws,d,t+td1])
                 umore = quicksum(umore)
@@ -214,19 +218,28 @@ class GurobiModel:
                 # (stop or cont) implies u status
                 mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nstat[u,us,t+td] -umore <= 0)
 
+                # more specific u status
+                if checkNode(up):
+                    for ws in behind:
+                        usPlusWs = whats.usPlusWs[us][ws]
+                        mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -nstat[u,usPlusWs,t+td] 
+                            +cont[up,ws,d,t+td1] +stop[up,ws,d,t+td1] <= 1)
+                       # mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] +nstat[u,usPlusWs,t+td] 
+                       #     -cont[up,ws,d,t+td1] -stop[up,ws,d,t+td1] <= 1)
+
                 # (stop or cont) implies v status
                 nst = []
                 for s in vs:
                     nst.append(nstat[v,s,t+td])
                 nst = quicksum(nst)
-                mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nst <= 0)
+                mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nst <= 0, 'paks')
 
                 # more specific v status
                 for i in range(len(vs)):
                     mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -nstat[v,vs1[i],t+td1]
-                        +nstat[v,vs[i],t+td] -vmore <= 1)
+                        +nstat[v,vs[i],t+td] -vmore <= 1, 'pikk')
                     mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] +nstat[v,vs1[i],t+td1]
-                        -nstat[v,vs[i],t+td] -vmore <= 1)
+                        -nstat[v,vs[i],t+td] -vmore <= 1, 'pakk')
 
         # general node status changes
         for u,w,t in itertools.product(nodes(), whats.what, timeiter):
