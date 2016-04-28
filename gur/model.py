@@ -60,7 +60,6 @@ class GurobiModel:
             mo.addConstr(cont[u,w,d,0] == 0);
             mo.addConstr(stop[u,w,d,0] == 0);
 
-
         # some ideas for good constraints:
         #  * count the number of cars, make sure that it stays same
         #  * count the number of robots, make sure that it stays same
@@ -134,6 +133,8 @@ class GurobiModel:
                     td = 3
 
                 if not checkTime(t,td):
+                    # cannot complete
+                    mo.addConstr(go[u,w,d,t] == 0)
                     continue
                 td1 = td - 1
                 td2 = 2 * td1
@@ -157,6 +158,9 @@ class GurobiModel:
                 # better for the last section
                 mo.addConstr(stop[u,w,d,t+td1] - go[u,w,d,t] <= 0)
                 mo.addConstr(cont[u,w,d,t+td1] - go[u,w,d,t] <= 0)
+
+                # cont or stop add to 1
+                mo.addConstr(stop[u,w,d,t] + cont[u,w,d,t] <= 1)
                 # (go or cont) implies (cont or stop)
                 mo.addConstr(go[u,w,d,t] +cont[u,w,d,t] -cont[u,w,d,t+td1] -stop[u,w,d,t+td1] == 0)
 
@@ -329,6 +333,9 @@ class GurobiModel:
                 ws = whats.dropWhatHelper[w]
                 # drop implies end node status
                 mo.addConstr(drop[v,w,t] -nstat[v,ws,t+2] <= 0)
+            else:
+                # cannot complete operation: disable it
+                mo.addConstr(drop[v,w,t] == 0)
 
         # lifting constraints
         for v,w,t in itertools.product(nodes(), whats.liftWhat, timeiter):
@@ -341,6 +348,9 @@ class GurobiModel:
                 ws = whats.dropWhatHelper[w]
                 # lift implies end node status
                 mo.addConstr(lift[v,w,t] -nstat[v,ws,t+6] <= 0)
+            else:
+                # cannot complete operation: disable it
+                mo.addConstr(lift[v,w,t] == 0)
 
         mo.update()
 
