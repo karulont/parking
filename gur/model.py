@@ -283,6 +283,41 @@ class GurobiModel:
             mo.addConstr(away <= 1)
             mo.addConstr(nstat[u,w,t+1] +more -away <= 1)
 
+        # edge not in use constraints
+        for u,d in itertools.product(nodes(), diriter):
+            v = edg(u,d)
+            if not checkNode(v):
+                continue
+            e = (u,v)
+            if not checkEdge(e):
+                continue
+
+            for t in timeiter:
+                # collect stuff
+                incoming = []
+                for w in whats.moveWhat:
+                    if (d == 'N' or d == 'S') and (w in whats.dropWhat):
+                        # movement is slow and length is long
+                        td = 5
+                    elif (d == 'E' or d == 'W') and (w in whats.robotsWhat):
+                        # movement fast and lenght short
+                        td = 2
+                    else:
+                        # movement fast and long or movement slow and short
+                        td = 3
+                    for tdd in range(td+1):
+                        tc = t-tdd
+                        if not checkTime(t, -tdd):
+                            continue
+                        incoming.append(go[u,w,d,tc])
+                        incoming.append(stop[u,w,d,tc])
+                        incoming.append(cont[u,w,d,tc])
+
+                incoming = quicksum(incoming)
+                mo.addConstr(occu[e,t] - incoming <= 0, 'asd')
+                mo.addConstr( -2*occu[e,t] + incoming <= 0, 'asd2')
+
+
 
         # dropping constraints
         for v,w,t in itertools.product(nodes(), whats.dropWhat, timeiter):
