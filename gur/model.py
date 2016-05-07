@@ -309,17 +309,20 @@ class GurobiModel:
                     else:
                         # movement fast and long or movement slow and short
                         td = 3
-                    for tdd in range(td+1):
-                        tc = t-tdd
-                        if not checkTime(t, -tdd):
+                    for tdd in range(-1,td):
+                        tc = t+tdd
+                        if not checkTime(t, tdd):
                             continue
-                        incoming.append(go[u,w,d,tc])
                         incoming.append(stop[u,w,d,tc])
                         incoming.append(cont[u,w,d,tc])
 
                 incoming = quicksum(incoming)
                 mo.addConstr(occu[e,t] - incoming <= 0, 'asd')
                 mo.addConstr( -2*occu[e,t] + incoming <= 0, 'asd2')
+                if checkTime(t,1):
+                    mo.addConstr(-occu[e,t] -2*occu[e,t+1] + incoming <= 0, 'pk')
+                    #mo.addConstr(occu[e,t+1] - incoming <= 0, 'ppp')
+                    mo.addConstr(-occu[e,t+1] + incoming <= 1, 'pppr')
 
 
 
