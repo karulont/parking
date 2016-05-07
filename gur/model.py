@@ -70,8 +70,8 @@ class GurobiModel:
             mo.addConstr(quicksum(s) == 1)
 
         # edge can be used once per timestep
-        for u in nodes():
-            for v,t in itertools.product(neighbours(u), timeiter):
+        for u,v in self.conf.edges():
+            for t in timeiter:
                 o = occu[(u,v),t]
                 no = occu[(v,u),t]
                 mo.addConstr(quicksum([o,no]) <= 1)
