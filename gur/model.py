@@ -12,8 +12,8 @@ class GurobiModel:
         self.conf = conf
         self.model = Model("parking")
         self.model.params.LogToConsole = False
-        self.model.params.Heuristics = 0.9
-        self.model.params.Cuts = 0
+        self.model.params.Heuristics = 0.7
+        #self.model.params.Cuts = 0
 
         def addFunc(set, setname, key):
             set[key] = self.model.addVar(vtype = GRB.BINARY,
@@ -116,7 +116,8 @@ class GurobiModel:
             v = edg(u,d);
             vp = edg(v,d);
             e = (u,v)
-            if not checkEdge((u,v)):
+            up = edg(u,oppositeDir(d))
+            if not checkEdge(e):
                 # Off grid in that direction
                 continue
             for t in timeiter:
@@ -151,21 +152,23 @@ class GurobiModel:
 
                 # not sure why this, but okay for now
                 # make sure that node status is the same for at stop and go time
-                mo.addConstr(stop[u,w,d,t+td1] -nstat[u,w,t] <= 0)
-                mo.addConstr(cont[u,w,d,t+td1] -nstat[u,w,t] <= 0)
+                # mo.addConstr(stop[u,w,d,t+td1] -nstat[u,w,t] <= 0)
+                # mo.addConstr(cont[u,w,d,t+td1] -nstat[u,w,t] <= 0)
                 mo.addConstr(stop[u,w,d,t+td1] -nstat[u,w,t+td1] <= 0)
                 mo.addConstr(cont[u,w,d,t+td1] -nstat[u,w,t+td1] <= 0)
-                # better for the last section
-                mo.addConstr(stop[u,w,d,t+td1] - go[u,w,d,t] <= 0)
-                mo.addConstr(cont[u,w,d,t+td1] - go[u,w,d,t] <= 0)
 
                 # cont or stop add to 1
                 mo.addConstr(stop[u,w,d,t] + cont[u,w,d,t] <= 1)
-                # (go or cont) implies (cont or stop)
-                mo.addConstr(go[u,w,d,t] +cont[u,w,d,t] -cont[u,w,d,t+td1] -stop[u,w,d,t+td1] == 0)
+                # cont implies (cont or stop)
+                if checkEdge((up,u)):
+                    mo.addConstr(go[u,w,d,t] +cont[up,w,d,t] -cont[u,w,d,t+td1] 
+                            -stop[u,w,d,t+td1] == 0)
+                else:
+                    mo.addConstr(go[u,w,d,t] -cont[u,w,d,t+td1] 
+                            -stop[u,w,d,t+td1] == 0)
 
-                if not checkNode(vp):
-                    # if at edge, disable cont
+                if not checkEdge((v,vp)):
+                    # disable cont, because cannot go futher
                     mo.addConstr(cont[u,w,d,td1] == 0)
 
                 if t < td1:
@@ -207,7 +210,6 @@ class GurobiModel:
                     behind = whats.dropWhat
                     infront = whats.moveWhat
 
-                up = edg(u,oppositeDir(d))
                 umore = []
                 vmore = []
                 if checkNode(up):
@@ -367,7 +369,7 @@ class GurobiModel:
         self.model.update()
 
     def checkStatus(self):
-        return self.model.status == GRB.status.OPTIMAL
+        return self.model.status != GRB.status.INFEASIBLE
 
     def findIIS(self, fname):
         self.model.computeIIS()

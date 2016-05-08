@@ -26,6 +26,9 @@ class Prod(TestBase, Situation):
         m = model
         for x,y in self.conf.nodes():
             m.addConstr(nstat[(x,y), translate(self.jsondata[4][y][x]), self.conf.maxt] == 1)
+        for t in self.conf.timeiter:
+            for x,y in self.conf.nodes():
+                nstat[(x,y), translate(self.jsondata[4][y][x]), t].obj = -1
 
 def translate(status):
     if status == '':
@@ -40,4 +43,4 @@ def translate(status):
         return 'sc' + status
     raise Error(asd)
 
-Prod('../data/marsi3a.json', 40)
+#Prod('../data/marsi3a.json', 60)
