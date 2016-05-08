@@ -9,7 +9,7 @@ class GridConfig:
         self.ysize = ysize
         self.maxt = maxt
         self.K = K
-        self.timeiter = range(maxt)
+        self.timeiter = range(maxt+1)
 
         self.whats = NodeStatuses(self.K)
 
@@ -56,5 +56,5 @@ class GridConfig:
         return edge in self.edgeSet
 
     def checkTime(self, t, dt):
-        return t+dt < self.maxt and t+dt >= 0
+        return t+dt <= self.maxt and t+dt >= 0
 

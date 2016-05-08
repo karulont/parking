@@ -28,7 +28,6 @@ class GurobiModel:
         # reference grid conf stuff for easier access
         xsize = self.conf.xsize
         ysize = self.conf.ysize
-        maxt = self.conf.maxt
 
         nodes = self.conf.nodes
         edg = self.conf.edg
