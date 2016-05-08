@@ -54,7 +54,7 @@ class GurobiModel:
         # important: at time 0 everything is still so do not allow continue or stop
         for u,w,d in itertools.product(self.conf.nodes(), whats.moveWhat, diriter):
             v = self.conf.edg(u,d);
-            if not self.conf.checkNode(v):
+            if not self.conf.checkEdge((u,v)):
                 # Off grid in that direction
                 continue
             mo.addConstr(cont[u,w,d,0] == 0);
@@ -80,7 +80,8 @@ class GurobiModel:
         for v,t in itertools.product(nodes(), timeiter):
             s = []
             for u in neighbours(v):
-                s.append(occu[(u,v),t])
+                if checkEdge((u,v)):
+                    s.append(occu[(u,v),t])
             mo.addConstr(quicksum(s) <= 1)
 
         # orthogonal directions
@@ -101,7 +102,7 @@ class GurobiModel:
         for v,t in itertools.product(nodes(), timeiter):
             s = []
             for d,w in itertools.product(diriter, whats.moveWhat):
-                if checkNode(edg(v,d)):
+                if checkEdge((v,edg(v,d))):
                     s.append(go[v,w,d,t])
                     s.append(stop[v,w,d,t])
                     s.append(cont[v,w,d,t])
@@ -116,7 +117,7 @@ class GurobiModel:
             v = edg(u,d);
             vp = edg(v,d);
             e = (u,v)
-            if not checkNode(v):
+            if not checkEdge((u,v)):
                 # Off grid in that direction
                 continue
             for t in timeiter:
@@ -271,11 +272,11 @@ class GurobiModel:
 
             for d,wt in itertools.product(diriter, wi):
                 v = edg(u,d);
-                if checkNode(v):
+                if checkEdge((v,u)):
                     more.append(cont[v,wt,oppositeDir(d), t])
                     more.append(stop[v,wt,oppositeDir(d), t])
             for d,wt in itertools.product(diriter, wo):
-                if checkNode(edg(u,d)):
+                if checkEdge((u,edg(u,d))):
                     away.append(stop[u,w,d,t]);
                     away.append(cont[u,w,d,t]);
 

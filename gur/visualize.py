@@ -107,7 +107,7 @@ class Visualize:
 
             decision = ''
             for d,w in itertools.product(diriter, moveWhat):
-                if conf.checkNode(conf.edg(v,d)):
+                if conf.checkEdge((v,conf.edg(v,d))):
                     if go[v,w,d,t].x == 1:
                         decision = 'GO_{}{}'.format(d,w)
                     if stop[v,w,d,t].x == 1:
