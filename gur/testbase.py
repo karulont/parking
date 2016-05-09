@@ -4,13 +4,15 @@ from model import *
 from direction import *
 
 class TestBase:
-    def __init__(self):
+    def __init__(self, log=False):
         self.name = type(self).__name__
         all_tests.append(self)
+        self.log=log
 
     def run(self):
-        self.model = GurobiModel(self.conf)
+        self.model = GurobiModel(self.conf, log=self.log)
         self.model.setSituation(self.situationObj)
+        #self.model.writeToFile(self.name)
         self.model.optimize()
         self.passed = self.model.checkStatus()
         self.checked = False

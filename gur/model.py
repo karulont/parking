@@ -7,11 +7,11 @@ from vars import *
 
 class GurobiModel:
 
-    def __init__(self, conf):
+    def __init__(self, conf, log=False):
 
         self.conf = conf
         self.model = Model("parking")
-        self.model.params.LogToConsole = False
+        self.model.params.LogToConsole = log
         self.model.params.Heuristics = 0.7
         self.model.params.Cuts = 0
 
@@ -150,8 +150,6 @@ class GurobiModel:
                     mo.addConstr(go[u,w,d,t] == 0)
                     continue
                 td1 = td - 1
-                td2 = 2 * td1
-
 
                 goOrCont = {go[u,w,d,t]}
                 if checkEdge((up,u)):
@@ -380,6 +378,9 @@ class GurobiModel:
 
     def optimize(self):
         self.model.optimize()
+
+    def writeToFile(self, file):
+        self.model.write(file + '.lp.bz2')
 
     def setSituation(self, sit):
         sit.situation(self.model, self.vars)

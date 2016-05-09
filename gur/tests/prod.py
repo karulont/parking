@@ -1,12 +1,14 @@
 from testbase import *
 from gridconfig_json import *
 import json
+from os.path import basename, splitext
 
 class Prod(TestBase, Situation):
     def __init__(self, jsonfile, maxt):
         with open(jsonfile, 'r') as f:
             self.jsondata = json.load(f)
-            TestBase.__init__(self)
+            TestBase.__init__(self, log=True)
+            self.name = splitext(basename(jsonfile))[0]
             self.conf = GridConfig_json(self.jsondata, maxt)
             Situation.__init__(self, self.conf)
             self.situationObj = self
