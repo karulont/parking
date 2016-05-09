@@ -13,7 +13,7 @@ class GurobiModel:
         self.model = Model("parking")
         self.model.params.LogToConsole = False
         self.model.params.Heuristics = 0.7
-        #self.model.params.Cuts = 0
+        self.model.params.Cuts = 0
 
         def addFunc(set, setname, key):
             set[key] = self.model.addVar(vtype = GRB.BINARY,
@@ -51,7 +51,7 @@ class GurobiModel:
         mo.update()
 
         # important: at time 0 everything is still so do not allow continue or stop
-        for u,w,d in itertools.product(self.conf.nodes(), whats.moveWhat, diriter):
+        for u,w,d in itertools.product(self.conf.nodes(), whats.mcWhat, diriter):
             v = self.conf.edg(u,d);
             if not self.conf.checkEdge((u,v)):
                 # Off grid in that direction
@@ -62,6 +62,15 @@ class GurobiModel:
         # some ideas for good constraints:
         #  * count the number of cars, make sure that it stays same
         #  * count the number of robots, make sure that it stays same
+        # robotWhat = whats.moveWhat.union(whats.allLiftWhat, whats.allDropWhat)
+        # for t in timeiter:
+        #     for ti in range(t,self.conf.maxt+1):
+        #         robotsnow = set()
+        #         robotsnext = set()
+        #         for v,w in itertools.product(nodes(), robotWhat):
+        #             robotsnow.add(nstat[v,w,t])
+        #             robotsnext.add(nstat[v,w,ti])
+        #         mo.addConstr(quicksum(robotsnow) == quicksum(robotsnext), 'countR')
 
         # one status per node per timestep
         for v,t in itertools.product(nodes(), timeiter):
@@ -100,7 +109,7 @@ class GurobiModel:
         # no more than one decision per node per timestep
         for v,t in itertools.product(nodes(), timeiter):
             s = []
-            for d,w in itertools.product(diriter, whats.moveWhat):
+            for d,w in itertools.product(diriter, whats.mcWhat):
                 if checkEdge((v,edg(v,d))):
                     s.append(go[v,w,d,t])
                     s.append(stop[v,w,d,t])
@@ -112,16 +121,19 @@ class GurobiModel:
             mo.addConstr(quicksum(s) <= 1)
 
         # robot movements
-        for u,w,d in itertools.product(nodes(), whats.moveWhat, diriter):
+        for u,w,d in itertools.product(nodes(), whats.mcWhat, diriter):
             v = edg(u,d);
             vp = edg(v,d);
             e = (u,v)
             up = edg(u,oppositeDir(d))
+            uWhat = {mw for mw in whats.moveWhat if whats.getMovingComponent[mw] == w}
             if not checkEdge(e):
                 # Off grid in that direction
                 continue
             for t in timeiter:
-                mo.addConstr(go[u,w,d,t] - nstat[u,w,t] <= 0)
+                uWhatsNow = {nstat[u,wp,t] for wp in uWhat}
+                # go can be 1, when status is right
+                mo.addConstr(go[u,w,d,t] -quicksum(uWhatsNow) <= 0, 'si')
 
                 if (d == 'N' or d == 'S') and (w in whats.dropWhat):
                     # movement is slow and length is long
@@ -140,146 +152,154 @@ class GurobiModel:
                 td1 = td - 1
                 td2 = 2 * td1
 
-                # go implies stop or cont
-                mo.addConstr(go[u,w,d,t] -stop[u,w,d,t+td1] -cont[u,w,d,t+td1] +nstat[u,w,t] <= 1)
+
+                goOrCont = {go[u,w,d,t]}
+                if checkEdge((up,u)):
+                    goOrCont.add(cont[up,w,d,t])
+
+                goOrCont = quicksum(goOrCont)
+                # go or cont sum to 1
+                mo.addConstr(goOrCont <= 1)
+
+                # go or cont implies stop or cont
+                mo.addConstr(goOrCont -stop[u,w,d,t+td1] -cont[u,w,d,t+td1] == 0)
 
                 # make sure edges are used
-                for i in range(td+1):
-                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -occu[e,t+i] <= 1)
+                for i in range(td):
+                    mo.addConstr(goOrCont -occu[e,t+i] <= 0)
                 # make sure the node status remains same for duration of movement
-                for i in range(1,td):
-                    mo.addConstr(go[u,w,d,t] +nstat[u,w,t] -nstat[u,w,t+i] <= 1)
+                for i,uw in itertools.product(range(1,td),uWhat):
+                    mo.addConstr(goOrCont +nstat[u,uw,t] -nstat[u,uw,t+i] <= 1)
 
                 # not sure why this, but okay for now
                 # make sure that node status is the same for at stop and go time
                 # mo.addConstr(stop[u,w,d,t+td1] -nstat[u,w,t] <= 0)
                 # mo.addConstr(cont[u,w,d,t+td1] -nstat[u,w,t] <= 0)
-                mo.addConstr(stop[u,w,d,t+td1] -nstat[u,w,t+td1] <= 0)
-                mo.addConstr(cont[u,w,d,t+td1] -nstat[u,w,t+td1] <= 0)
+                # mo.addConstr(stop[u,w,d,t+td1] -nstat[u,w,t+td1] <= 0)
+                # mo.addConstr(cont[u,w,d,t+td1] -nstat[u,w,t+td1] <= 0)
 
-                # cont or stop add to 1
-                mo.addConstr(stop[u,w,d,t] + cont[u,w,d,t] <= 1)
-                # cont implies (cont or stop)
-                if checkEdge((up,u)):
-                    mo.addConstr(go[u,w,d,t] +cont[up,w,d,t] -cont[u,w,d,t+td1] 
-                            -stop[u,w,d,t+td1] == 0)
-                else:
-                    mo.addConstr(go[u,w,d,t] -cont[u,w,d,t+td1] 
-                            -stop[u,w,d,t+td1] == 0)
+                # cont or stop sum to 1
+                mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] <= 1)
 
                 if not checkEdge((v,vp)):
                     # disable cont, because cannot go futher
-                    mo.addConstr(cont[u,w,d,td1] == 0)
+                    mo.addConstr(cont[u,w,d,t+td1] == 0)
 
                 if t < td1:
                     # disable cont or stop because could not be given
                     mo.addConstr(cont[u,w,d,t] == 0)
                     mo.addConstr(stop[u,w,d,t] == 0)
 
-                # status of v at t+td
-                if w == 'r':
-                    us = 'e'
-                    vs = ['r', 'rc']
-                    vs1 = ['e', 'c']
-                    for i in range(self.conf.K):
-                        vs.append('rsc' + str(i))
-                        vs1.append('sc' + str(i))
-                elif w in whats.liftWhat:
-                    us = whats.removeRobotWhat[w]
-                    vs = ['r', 'rc']
-                    vs1 = ['e', 'c']
-                    for i in range(self.conf.K):
-                        vs.append('rsc' + str(i))
-                        vs1.append('sc' + str(i))
-                elif w in whats.dropWhat:
-                    us = 'e'
-                    vs = [w]
-                    vs1 = ['e']
-                else:
-                    assert False, 'w = %r, liftWhat=%r' % (w, whats.liftWhat)
-
                 # construct set of things, which could move at same time
-                # TODO: look this over
                 if w == 'r':
-                    behind = whats.moveWhat
-                    infront = whats.robotsWhat
-                elif w in whats.liftWhat:
-                    behind = whats.robotsWhat
-                    infront = whats.robotsWhat
-                elif w in whats.dropWhat:
+                    behind = whats.mcWhat
+                    infront = {'r'}
+                else:
                     behind = whats.dropWhat
-                    infront = whats.moveWhat
+                    infront = whats.mcWhat
 
                 umore = []
-                vmore = []
-                if checkNode(up):
+                vless = []
+                if checkEdge((up,u)):
                     for ws in behind:
                         umore.append(cont[up,ws,d,t+td1])
                         umore.append(stop[up,ws,d,t+td1])
-                if checkNode(vp):
+                if checkEdge((v,vp)):
                     for ws in infront:
-                        vmore.append(cont[v,ws,d,t+td1])
-                        vmore.append(stop[v,ws,d,t+td1])
+                        vless.append(cont[v,ws,d,t+td1])
+                        vless.append(stop[v,ws,d,t+td1])
                 umore = quicksum(umore)
-                vmore = quicksum(vmore)
+                vless = quicksum(vless)
 
                 # (stop or cont) implies u status
-                mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nstat[u,us,t+td] -umore <= 0)
+                uless = {nstat[u,whats.removeMovingComponent[uw],t+td] for uw in uWhat}
+                uless = quicksum(uless)
+                mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -uless -umore <= 0,'un')
+
+                # TODO: check the below part
 
                 # more specific u status
-                if checkNode(up):
-                    for ws in behind:
-                        usPlusWs = whats.usPlusWs[us][ws]
-                        mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -nstat[u,usPlusWs,t+td] 
-                            +cont[up,ws,d,t+td1] +stop[up,ws,d,t+td1] <= 1)
-                       # mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] +nstat[u,usPlusWs,t+td] 
-                       #     -cont[up,ws,d,t+td1] -stop[up,ws,d,t+td1] <= 1)
+
+                if checkEdge((up,u)):
+                    for uw in uWhat:
+                        uLeft = whats.removeMovingComponent[uw]
+                        uLeftPlusWs = {
+                                nstat[u,whats.addMovingComponent[uLeft][ws],t+td]
+                                for ws in behind if ws in whats.addMovingComponent[uLeft]}
+                        uLeftPlusWs = quicksum(uLeftPlusWs)
+                        mo.addConstr(
+                                stop[u,w,d,t+td1] + cont[u,w,d,t+td1]
+                                +nstat[u,uw,t+td1]
+                                -uLeftPlusWs
+                                -nstat[u,uLeft,t+td]
+                                <= 1, 'as')
+                        mo.addConstr(
+                                cont[up,ws,d,t+td1] +stop[up,ws,d,t+td1] 
+                                +nstat[u,uw,t+td1]
+                                -uLeftPlusWs
+                                -nstat[u,uLeft,t+td]
+                                <= 1, '23')
+                        mo.addConstr(
+                                stop[u,w,d,t+td1] + cont[u,w,d,t+td1]
+                                -umore
+                                +nstat[u,uw,t+td1]
+                                -nstat[u,uLeft,t+td] <= 1, 'afg')
+                else:
+                    for uw in uWhat:
+                        uLeft = whats.removeMovingComponent[uw]
+                        mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] 
+                                +nstat[u,uw,t+td1] -nstat[u,uLeft,t+td] <= 1, 'sorry')
 
                 # (stop or cont) implies v status
                 nst = []
-                for s in vs:
-                    nst.append(nstat[v,s,t+td])
+                for ws in whats.noRobotWhat:
+                    if w in whats.addMovingComponent[ws]:
+                        wss = whats.addMovingComponent[ws][w]
+                        nst.append(nstat[v,wss,t+td])
+                        mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -nstat[v,ws,t+td1]
+                            +nstat[v,wss,t+td] -vless <= 1, 'pikk')
+                        mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] +nstat[v,ws,t+td1]
+                            -nstat[v,wss,t+td] -vless <= 1, 'pakk')
+                    else:
+                        # cannot add w to ws
+                        mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] + nstat[v,ws,t+td]
+                                -vless <= 1)
                 nst = quicksum(nst)
                 mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nst <= 0, 'paks')
-
-                # more specific v status
-                for i in range(len(vs)):
-                    mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -nstat[v,vs1[i],t+td1]
-                        +nstat[v,vs[i],t+td] -vmore <= 1, 'pikk')
-                    mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] +nstat[v,vs1[i],t+td1]
-                        -nstat[v,vs[i],t+td] -vmore <= 1, 'pakk')
 
         # general node status changes
         for u,w,t in itertools.product(nodes(), whats.what, timeiter):
             if not checkTime(t,1):
                 continue
 
-            more = []
-            away = []
+            more = set()
+            away = set()
 
             (wi, wo) = whats.nodeStatusIO[w]
             if w in whats.liftWhat:
-                away.append(lift[u,w,t])
+                away.add(lift[u,w,t])
             elif w in whats.dropWhat:
-                away.append(drop[u,w,t])
+                away.add(drop[u,w,t])
             elif w in whats.allLiftWhat:
                 if checkTime(t,-5):
                     for wl in whats.liftWhat:
-                        more.append(lift[u,wl,t-5])
+                        more.add(lift[u,wl,t-5])
             elif w in whats.allDropWhat:
                 if checkTime(t,-1):
                     for wd in whats.dropWhat:
-                        more.append(drop[u,wd,t-1])
+                        more.add(drop[u,wd,t-1])
 
             for d,wt in itertools.product(diriter, wi):
                 v = edg(u,d);
                 if checkEdge((v,u)):
-                    more.append(cont[v,wt,oppositeDir(d), t])
-                    more.append(stop[v,wt,oppositeDir(d), t])
+                    wtt = whats.getMovingComponent[wt]
+                    more.add(cont[v,wtt,oppositeDir(d), t])
+                    more.add(stop[v,wtt,oppositeDir(d), t])
             for d,wt in itertools.product(diriter, wo):
                 if checkEdge((u,edg(u,d))):
-                    away.append(stop[u,w,d,t]);
-                    away.append(cont[u,w,d,t]);
+                    wtt = whats.getMovingComponent[wt]
+                    away.add(stop[u,wtt,d,t]);
+                    away.add(cont[u,wtt,d,t]);
 
             more = quicksum(more)
             away = quicksum(away)
@@ -292,8 +312,6 @@ class GurobiModel:
         # edge not in use constraints
         for u,d in itertools.product(nodes(), diriter):
             v = edg(u,d)
-            if not checkNode(v):
-                continue
             e = (u,v)
             if not checkEdge(e):
                 continue
@@ -301,7 +319,7 @@ class GurobiModel:
             for t in timeiter:
                 # collect stuff
                 incoming = []
-                for w in whats.moveWhat:
+                for w in whats.mcWhat:
                     if (d == 'N' or d == 'S') and (w in whats.dropWhat):
                         # movement is slow and length is long
                         td = 5
@@ -311,7 +329,7 @@ class GurobiModel:
                     else:
                         # movement fast and long or movement slow and short
                         td = 3
-                    for tdd in range(-1,td):
+                    for tdd in range(td):
                         tc = t+tdd
                         if not checkTime(t, tdd):
                             continue

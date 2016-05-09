@@ -106,7 +106,7 @@ class Visualize:
                     break
 
             decision = ''
-            for d,w in itertools.product(diriter, moveWhat):
+            for d,w in itertools.product(diriter, self.model.conf.whats.mcWhat):
                 if conf.checkEdge((v,conf.edg(v,d))):
                     if go[v,w,d,t].x == 1:
                         decision = 'GO_{}{}'.format(d,w)

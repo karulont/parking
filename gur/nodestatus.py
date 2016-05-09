@@ -3,6 +3,8 @@ class NodeStatuses:
         self.K = K
         self.what, self.scj, self.rscj, self.scrj, self.slftj, self.sdrpj = makeWhat(self.K)
         self.moveWhat = set(['r', 'cr', 'rc']).union(self.rscj, self.scrj)
+        self.mcWhat = set(['r', 'cr']).union(self.scrj)
+        self.noRobotWhat = set(['e', 'c']).union(self.scj)
         self.liftWhat = set(['rc']).union(self.rscj)
         self.dropWhat = set(['cr']).union(self.scrj)
         self.carsWhat = set(['c']).union(self.scj)
@@ -14,6 +16,10 @@ class NodeStatuses:
         self.removeRobotWhat = makeRemoveRobotWhat(self.K)
         self.dropWhatHelper = makeDropWhatHelper(self.K)
         self.usPlusWs = makeUsPlusWs(self.K)
+        self.getMovingComponent = makeGetMovingComponent(self.K)
+        self.removeMovingComponent = makeRemoveMovingComponent(self.K)
+        self.addMovingComponent = makeAddMovingComponent(self.K)
+
 
     def makeNodeStatusIO(self):
         sio = {}
@@ -87,7 +93,6 @@ def makeRemoveRobotWhat(K):
 
 def makeUsPlusWs(K):
     what = {}
-    whate = {}
     what['e'] = {'r':'r', 'rc':'r', 'cr':'cr'}
     what['c'] = {'r':'rc', 'rc':'rc'}
     for i in range(K):
@@ -106,3 +111,35 @@ def makeUsPlusWs(K):
             what[c][rc1] = rc
 
     return what
+
+def makeGetMovingComponent(K):
+    d = {}
+    d['r'] = 'r'
+    d['rc'] = 'r'
+    d['cr'] = 'cr'
+    for i in range(K):
+        d['rsc'+str(i)] = 'r'
+        d['scr'+str(i)] = 'scr'+str(i)
+    return d
+
+def makeRemoveMovingComponent(K):
+    return makeRemoveRobotWhat(K)
+
+def makeAddMovingComponent(K):
+    d = {}
+    d['e'] = {'r':'r', 'cr':'cr'}
+    d['c'] = {'r':'rc'}
+    for i in range(K):
+        c = 'sc' + str(i)
+        rc = 'rsc' + str(i)
+        cr = 'scr' + str(i)
+        d['e'][cr] = cr
+        d['c'][rc] = 'rc'
+        d[c] = {'r':rc, 'rc':rc}
+    for i in range(K):
+        c = 'sc' + str(i)
+        rc = 'rsc' + str(i)
+        for j in range(K):
+            rc1 = 'rsc' + str(j)
+            d[c][rc1] = rc
+    return d

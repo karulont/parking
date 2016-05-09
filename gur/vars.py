@@ -24,7 +24,7 @@ class Vars():
         drop = {}
 
         for v in conf.nodes():
-            for w,d,t in itertools.product(whats.moveWhat, diriter, conf.timeiter):
+            for w,d,t in itertools.product(whats.mcWhat, diriter, conf.timeiter):
                 if conf.checkEdge((v,conf.edg(v,d))):
                     addVar(go, "go", (v,w,d,t))
                     addVar(stop, "stop", (v,w,d,t))

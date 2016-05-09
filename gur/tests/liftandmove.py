@@ -52,7 +52,7 @@ class LiftAndMoveForced(TestBase, Situation):
         mo.addConstr(nstat[specifyNode(1,0), 'sc0', 0] == 1)
         mo.addConstr(nstat[specifyNode(2,0), 'rc', 0] == 1)
 
-        mo.addConstr(go[(2,0),'rc','W',0] == 1)
+        mo.addConstr(go[(2,0),'r','W',0] == 1)
         mo.addConstr(vars.lift[(1,0),'rsc0',2] == 1)
         mo.addConstr(go[(1,0),'scr0','W',8] == 1)
         mo.addConstr(nstat[(0,0), 'e', 8] == 1)
@@ -76,7 +76,7 @@ class LiftAndMoveForced(TestBase, Situation):
 class LiftAndMove3(TestBase, Situation):
     def __init__(self):
         TestBase.__init__(self)
-        self.conf = GridConfig(3, 2, 30, 1)
+        self.conf = GridConfig(3, 2, 25, 1)
         Situation.__init__(self, self.conf)
         self.situationObj = self
         self.shouldPass = True
@@ -100,4 +100,4 @@ class LiftAndMove3(TestBase, Situation):
 
 LiftAndMove()
 LiftAndMoveForced()
-#LiftAndMove3()
+LiftAndMove3()
