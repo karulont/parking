@@ -28,7 +28,7 @@ class LargeTest(TestBase, Situation):
 class Puzzle(TestBase, Situation):
     def __init__(self):
         TestBase.__init__(self)
-        self.conf = GridConfig(3, 3, 20, 0)
+        self.conf = GridConfig(3, 3, 15, 0)
         Situation.__init__(self, self.conf)
         self.situationObj = self
         self.shouldPass = True

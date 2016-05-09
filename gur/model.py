@@ -14,6 +14,8 @@ class GurobiModel:
         self.model.params.LogToConsole = log
         self.model.params.Heuristics = 0.7
         self.model.params.Cuts = 0
+        self.model.params.PrePasses = 3
+        self.model.params.Presolve = 2
 
         def addFunc(set, setname, key):
             set[key] = self.model.addVar(vtype = GRB.BINARY,
@@ -135,10 +137,10 @@ class GurobiModel:
                 # go can be 1, when status is right
                 mo.addConstr(go[u,w,d,t] -quicksum(uWhatsNow) <= 0, 'si')
 
-                if (d == 'N' or d == 'S') and (w in whats.dropWhat):
+                if (d == 'N' or d == 'S') and w != 'r':
                     # movement is slow and length is long
                     td = 5
-                elif (d == 'E' or d == 'W') and (w in whats.robotsWhat):
+                elif (d == 'E' or d == 'W') and w == 'r':
                     # movement fast and lenght short
                     td = 2
                 else:
@@ -154,10 +156,10 @@ class GurobiModel:
                 goOrCont = {go[u,w,d,t]}
                 if checkEdge((up,u)):
                     goOrCont.add(cont[up,w,d,t])
+                    # go or cont sum to 1
+                    mo.addConstr(quicksum(goOrCont) <= 1)
 
                 goOrCont = quicksum(goOrCont)
-                # go or cont sum to 1
-                mo.addConstr(goOrCont <= 1)
 
                 # go or cont implies stop or cont
                 mo.addConstr(goOrCont -stop[u,w,d,t+td1] -cont[u,w,d,t+td1] == 0)
@@ -191,10 +193,10 @@ class GurobiModel:
                 # construct set of things, which could move at same time
                 if w == 'r':
                     behind = whats.mcWhat
-                    infront = {'r'}
+                    ahead = {'r'}
                 else:
                     behind = whats.dropWhat
-                    infront = whats.mcWhat
+                    ahead = whats.mcWhat
 
                 umore = []
                 vless = []
@@ -203,7 +205,7 @@ class GurobiModel:
                         umore.append(cont[up,ws,d,t+td1])
                         umore.append(stop[up,ws,d,t+td1])
                 if checkEdge((v,vp)):
-                    for ws in infront:
+                    for ws in ahead:
                         vless.append(cont[v,ws,d,t+td1])
                         vless.append(stop[v,ws,d,t+td1])
                 umore = quicksum(umore)

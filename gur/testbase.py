@@ -12,7 +12,7 @@ class TestBase:
     def run(self):
         self.model = GurobiModel(self.conf, log=self.log)
         self.model.setSituation(self.situationObj)
-        #self.model.writeToFile(self.name)
+        self.model.writeToFile(self.name)
         self.model.optimize()
         self.passed = self.model.checkStatus()
         self.checked = False
