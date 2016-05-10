@@ -15,15 +15,17 @@ class LargeTest(TestBase, Situation):
         go = vars.go
 
         mo.addConstr(nstat[specifyNode(0,0), 'r', 0] == 1)
+        mo.addConstr(nstat[specifyNode(0,1), 'r', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,1), 'r', 0] == 1)
         # all other nodes filled with empty
         for v in set(self.conf.nodes()).difference(self.definedNodes):
             mo.addConstr(nstat[v, 'e', 0] == 1)
 
-        mo.addConstr(vars.cont[(0,0),'r','E',1] == 1)
-
     def objective(self, model, vars):
         for t in self.conf.timeiter:
             vars.nstat[(3,0),'r',t].obj = -1
+            vars.nstat[(3,1),'r',t].obj = -1
+            vars.nstat[(2,1),'r',t].obj = -1
 
 class Puzzle(TestBase, Situation):
     def __init__(self):
@@ -52,4 +54,4 @@ class Puzzle(TestBase, Situation):
             vars.nstat[(1,1),'e',t].obj = -1
 
 LargeTest()
-Puzzle()
+#Puzzle()

@@ -100,4 +100,4 @@ class LiftAndMove3(TestBase, Situation):
 
 LiftAndMove()
 LiftAndMoveForced()
-LiftAndMove3()
+#LiftAndMove3()
