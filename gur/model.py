@@ -220,9 +220,14 @@ class GurobiModel:
 
                 # more specific u status
 
-                if checkEdge((up,u)):
-                    for uw in uWhat:
-                        uLeft = whats.removeMovingComponent[uw]
+                for uw in uWhat:
+                    uLeft = whats.removeMovingComponent[uw]
+                    mo.addConstr(
+                            stop[u,w,d,t+td1] + cont[u,w,d,t+td1]
+                            -umore
+                            +nstat[u,uw,t+td1]
+                            -nstat[u,uLeft,t+td] <= 1, 'afg')
+                    if checkEdge((up,u)):
                         uLeftPlusWs = {
                                 nstat[u,whats.addMovingComponent[uLeft][ws],t+td]
                                 for ws in behind if ws in whats.addMovingComponent[uLeft]}
@@ -239,16 +244,6 @@ class GurobiModel:
                                 -uLeftPlusWs
                                 -nstat[u,uLeft,t+td]
                                 <= 1, '23')
-                        mo.addConstr(
-                                stop[u,w,d,t+td1] + cont[u,w,d,t+td1]
-                                -umore
-                                +nstat[u,uw,t+td1]
-                                -nstat[u,uLeft,t+td] <= 1, 'afg')
-                else:
-                    for uw in uWhat:
-                        uLeft = whats.removeMovingComponent[uw]
-                        mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] 
-                                +nstat[u,uw,t+td1] -nstat[u,uLeft,t+td] <= 1, 'sorry')
 
                 # (stop or cont) implies v status
                 nst = []
