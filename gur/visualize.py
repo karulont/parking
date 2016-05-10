@@ -1,4 +1,4 @@
-from tkinter import Tk, Canvas, mainloop, Label, Button, LEFT, RIGHT, HIDDEN, NORMAL
+from tkinter import Tk, Canvas, mainloop, Label, Button, LEFT, RIGHT, HIDDEN, NORMAL, BOTH, YES
 from direction import *
 import itertools
 
@@ -15,7 +15,7 @@ class Visualize:
 
         self.root = Tk()
         self.canvas = Canvas(self.root)
-        self.canvas.pack()
+        self.canvas.pack(fill=BOTH, expand=YES)
         self.root.bind("<KeyRelease>", self.key_released)
         self.timeLabel = Label(self.root, text='time_lavel')
         self.timeLabel.pack(side=RIGHT)
@@ -27,7 +27,7 @@ class Visualize:
 
     def key_released(self, event):
         if event.char == 'j':
-            if self.time < self.model.conf.maxt - 1:
+            if self.time < self.model.conf.maxt:
                 self.time = self.time + 1
                 self.draw()
         elif event.char == 'k':
@@ -106,8 +106,8 @@ class Visualize:
                     break
 
             decision = ''
-            for d,w in itertools.product(diriter, moveWhat):
-                if conf.checkNode(conf.edg(v,d)):
+            for d,w in itertools.product(diriter, self.model.conf.whats.mcWhat):
+                if conf.checkEdge((v,conf.edg(v,d))):
                     if go[v,w,d,t].x == 1:
                         decision = 'GO_{}{}'.format(d,w)
                     if stop[v,w,d,t].x == 1:

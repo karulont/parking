@@ -50,7 +50,7 @@ class MovingTogetherDifferent(TestBase, Situation):
         mo.addConstr(nstat[specifyNode(3,0), 'r', 0] == 1)
         mo.addConstr(nstat[specifyNode(4,0), 'cr', 0] == 1)
         mo.addConstr(go[(1,0), 'r', 'W', 0] == 1)
-        mo.addConstr(go[(2,0), 'rc', 'W', 0] == 1)
+        mo.addConstr(go[(2,0), 'r', 'W', 0] == 1)
         mo.addConstr(go[(3,0), 'r', 'W', 0] == 1)
         mo.addConstr(go[(4,0), 'cr', 'W', 0] == 1)
 

@@ -7,7 +7,11 @@ from visualize import Visualize
 import sys
 
 def main():
-    pass
+    if len(sys.argv) == 3:
+        all_tests.clear()
+        prod.Prod(sys.argv[1], int(sys.argv[2]))
+
+    runTests()
 
 def runTests():
     for i,t in enumerate(all_tests):
@@ -27,4 +31,4 @@ def runTests():
         test.model.findIIS(test.name)
 
 if __name__ == '__main__':
-    runTests()
+    main()

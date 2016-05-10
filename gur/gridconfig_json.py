@@ -10,7 +10,7 @@ class GridConfig_json:
         self.grid = jsondata[2]
         self.maxt = maxt
         self.K = 3
-        self.timeiter = range(maxt)
+        self.timeiter = range(maxt+1)
 
         self.whats = NodeStatuses(self.K)
 
@@ -59,5 +59,5 @@ class GridConfig_json:
         return edge in self.edgeSet
 
     def checkTime(self, t, dt):
-        return t+dt < self.maxt and t+dt >= 0
+        return t+dt <= self.maxt and t+dt >= 0
 
