@@ -257,14 +257,12 @@ class GurobiModel:
                 away.add(lift[u,w,t])
             elif w in whats.dropWhat:
                 away.add(drop[u,w,t])
-            elif w in whats.allLiftWhat:
-                if checkTime(t,-5):
-                    for wl in whats.liftWhat:
-                        more.add(lift[u,wl,t-5])
-            elif w in whats.allDropWhat:
-                if checkTime(t,-1):
-                    for wd in whats.dropWhat:
-                        more.add(drop[u,wd,t-1])
+            elif w == 'lft' and checkTime(t,-5):
+                for wl in whats.liftWhat:
+                    more.add(lift[u,wl,t-5])
+            elif w == 'drp' and checkTime(t,-1):
+                for wd in whats.dropWhat:
+                    more.add(drop[u,wd,t-1])
 
             for d,wt in itertools.product(diriter, wi):
                 v = edg(u,d);

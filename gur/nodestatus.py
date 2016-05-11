@@ -1,7 +1,7 @@
 class NodeStatuses:
     def __init__(self, K):
         self.K = K
-        self.what, self.scj, self.rscj, self.scrj, self.slftj, self.sdrpj = makeWhat(self.K)
+        self.what, self.scj, self.rscj, self.scrj = makeWhat(self.K)
         self.moveWhat = set(['r', 'cr', 'rc']).union(self.rscj, self.scrj)
         self.mcWhat = set(['r', 'cr']).union(self.scrj)
         self.noRobotWhat = set(['e', 'c']).union(self.scj)
@@ -9,8 +9,6 @@ class NodeStatuses:
         self.dropWhat = set(['cr']).union(self.scrj)
         self.carsWhat = set(['c']).union(self.scj)
         self.robotsWhat = set(['r','rc']).union(self.rscj)
-        self.allLiftWhat = set(['lft']).union(self.slftj)
-        self.allDropWhat = set(['drp']).union(self.sdrpj)
 
         self.nodeStatusIO = self.makeNodeStatusIO()
         self.removeRobotWhat = makeRemoveRobotWhat(self.K)
@@ -31,9 +29,7 @@ class NodeStatuses:
             sio[w] = (set(), set('r'))
         for w in self.dropWhat:
             sio[w] = (set(), set([w]))
-        for w in self.allLiftWhat:
-            sio[w] = (set(), set())
-        for w in self.allDropWhat:
+        for w in set(['drp','lft']):
             sio[w] = (set(), set())
         return sio
 
@@ -63,16 +59,10 @@ def makeWhat(K):
     for j in range(K):
         scrj.add('scr'+str(j))
     what.add('lft')
-    slftj = set()
-    for j in range(K):
-        slftj.add('slft'+str(j))
     what.add('drp')
-    sdrpj = set()
-    for j in range(K):
-        sdrpj.add('sdrp'+str(j))
 
-    what = what.union(scj,rscj,scrj,slftj,sdrpj)
-    return what, scj, rscj, scrj, slftj, sdrpj
+    what = what.union(scj,rscj,scrj)
+    return what, scj, rscj, scrj
 
 
 def makeRemoveRobotWhat(K):
