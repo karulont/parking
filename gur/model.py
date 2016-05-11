@@ -178,13 +178,6 @@ class GurobiModel:
                 for i,uw in itertools.product(range(1,td),uWhat):
                     mo.addConstr(goOrCont +nstat[u,uw,t] -nstat[u,uw,t+i] <= 1)
 
-                # not sure why this, but okay for now
-                # make sure that node status is the same for at stop and go time
-                # mo.addConstr(stop[u,w,d,t+td1] -nstat[u,w,t] <= 0)
-                # mo.addConstr(cont[u,w,d,t+td1] -nstat[u,w,t] <= 0)
-                # mo.addConstr(stop[u,w,d,t+td1] -nstat[u,w,t+td1] <= 0)
-                # mo.addConstr(cont[u,w,d,t+td1] -nstat[u,w,t+td1] <= 0)
-
                 # cont or stop sum to 1
                 mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] <= 1)
 
@@ -223,8 +216,6 @@ class GurobiModel:
                 uless = quicksum(uless)
                 mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -uless -umore <= 0,'un')
 
-                # TODO: check the below part
-
                 # more specific u status
 
                 for uw in uWhat:
@@ -243,17 +234,15 @@ class GurobiModel:
                                         -nstat[u,whats.addMovingComponent[uLeft][ws],t+td]
                                         <= 1, '23')
 
-                nst = []
-                for ws in whats.noRobotWhat:
-                    if w in whats.addMovingComponent[ws]:
-                        wss = whats.addMovingComponent[ws][w]
-                        nst.append(nstat[v,wss,t+td])
-                        # stop or cont plus end status implies it was ws or something moved
-                        mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -nstat[v,ws,t+td1]
-                            +nstat[v,wss,t+td] -vless <= 1, 'pikk')
+                nst = {nstat[v,wu,t+td] for wu in uWhat}
                 nst = quicksum(nst)
                 # stop or cont implies v status
                 mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nst <= 0, 'paks')
+                for wv in uWhat:
+                    vBefore = whats.removeMovingComponent[wv]
+                    mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -nstat[v,vBefore,t+td1]
+                        +nstat[v,wv,t+td] -vless <= 1, 'pikk')
+
 
         # general node status changes
         for u,w,t in itertools.product(nodes(), whats.what, timeiter):
