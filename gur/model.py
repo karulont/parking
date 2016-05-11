@@ -12,7 +12,7 @@ class GurobiModel:
         self.conf = conf
         self.model = Model("parking")
         self.model.params.LogToConsole = log
-        self.model.params.Heuristics = 0.7
+        self.model.params.Threads = 4
         self.model.params.Cuts = 0
         self.model.params.PrePasses = 3
         self.model.params.Presolve = 2
@@ -147,11 +147,11 @@ class GurobiModel:
                     # movement fast and long or movement slow and short
                     td = 3
 
-                if not checkTime(t,td):
-                    # cannot complete
+                td1 = td - 1
+
+                if not checkTime(t,td1):
                     mo.addConstr(go[u,w,d,t] == 0)
                     continue
-                td1 = td - 1
 
                 goOrCont = {go[u,w,d,t]}
                 if checkEdge((up,u)):
@@ -163,6 +163,11 @@ class GurobiModel:
 
                 # go or cont implies stop or cont
                 mo.addConstr(goOrCont -stop[u,w,d,t+td1] -cont[u,w,d,t+td1] == 0)
+
+                if not checkTime(t,td):
+                    # cannot complete
+                    mo.addConstr(go[u,w,d,t] == 0)
+                    continue
 
                 # make sure edges are used
                 for i in range(td):
