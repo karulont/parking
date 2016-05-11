@@ -16,6 +16,8 @@ class GurobiModel:
         self.model.params.Cuts = 0
         self.model.params.PrePasses = 3
         self.model.params.Presolve = 2
+        self.model.params.Heuristics = 0
+        self.model.params.MIPFocus = 2
 
         def addFunc(set, setname, key):
             set[key] = self.model.addVar(vtype = GRB.BINARY,
@@ -241,21 +243,16 @@ class GurobiModel:
                                         -nstat[u,whats.addMovingComponent[uLeft][ws],t+td]
                                         <= 1, '23')
 
-                # (stop or cont) implies v status
                 nst = []
                 for ws in whats.noRobotWhat:
                     if w in whats.addMovingComponent[ws]:
                         wss = whats.addMovingComponent[ws][w]
                         nst.append(nstat[v,wss,t+td])
+                        # stop or cont plus end status implies it was ws or something moved
                         mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] -nstat[v,ws,t+td1]
                             +nstat[v,wss,t+td] -vless <= 1, 'pikk')
-                        mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] +nstat[v,ws,t+td1]
-                            -nstat[v,wss,t+td] -vless <= 1, 'pakk')
-                    else:
-                        # cannot add w to ws
-                        mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] + nstat[v,ws,t+td]
-                                -vless <= 1)
                 nst = quicksum(nst)
+                # stop or cont implies v status
                 mo.addConstr(stop[u,w,d,t+td1] + cont[u,w,d,t+td1] - nst <= 0, 'paks')
 
         # general node status changes
