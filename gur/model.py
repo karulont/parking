@@ -33,6 +33,7 @@ class GurobiModel:
         ysize = self.conf.ysize
 
         nodes = self.conf.nodes
+        edges = self.conf.edges
         timeiter = self.conf.timeiter
         whats = self.conf.whats
 
@@ -79,7 +80,7 @@ class GurobiModel:
             mo.addConstr(quicksum(s) == 1)
 
         # edge can be used once per timestep
-        for u,v in self.conf.edges():
+        for u,v in edges():
             for t in timeiter:
                 o = occu[(u,v),t]
                 no = occu[(v,u),t]
@@ -273,33 +274,25 @@ class GurobiModel:
             mo.addConstr(nstat[u,w,t+1] +more -away <= 1)
 
         # edge not in use constraints
-        for u,d in itertools.product(nodes(), diriter):
-            v = edg(u,d)
-            e = (u,v)
-            if not checkEdge(e):
-                continue
+        for e,t in itertools.product(edges(), timeiter):
+            u,v = e
+            d = getEdgeDir(e)
 
-            for t in timeiter:
-                # collect stuff
-                incoming = []
-                for w in whats.mcWhat:
-                    td = getMovementTime(d,w)
-                    for tdd in range(td):
-                        tc = t+tdd
-                        if not checkTime(t, tdd):
-                            continue
-                        incoming.append(stop[u,w,d,tc])
-                        incoming.append(cont[u,w,d,tc])
+            # collect stuff
+            incoming = []
+            for w in whats.mcWhat:
+                td = getMovementTime(d,w)
+                for tdd in range(td):
+                    tc = t+tdd
+                    if not checkTime(t, tdd):
+                        continue
+                    incoming.append(stop[u,w,d,tc])
+                    incoming.append(cont[u,w,d,tc])
 
-                incoming = quicksum(incoming)
-                mo.addConstr(occu[e,t] - incoming <= 0, 'asd')
-                mo.addConstr( -2*occu[e,t] + incoming <= 0, 'asd2')
-                if checkTime(t,1):
-                    mo.addConstr(-occu[e,t] -2*occu[e,t+1] + incoming <= 0, 'pk')
-                    #mo.addConstr(occu[e,t+1] - incoming <= 0, 'ppp')
-                    mo.addConstr(-occu[e,t+1] + incoming <= 1, 'pppr')
-
-
+            incoming = quicksum(incoming)
+            mo.addConstr(incoming <= 2, 'incoming')
+            mo.addConstr(occu[e,t] - incoming <= 0, 'asd')
+            mo.addConstr( -2*occu[e,t] + incoming <= 0, 'asd2')
 
         # dropping constraints
         for v,w,t in itertools.product(nodes(), whats.dropWhat, timeiter):
