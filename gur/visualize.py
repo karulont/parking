@@ -79,6 +79,7 @@ class Visualize:
             self.nodeDecision[v] = self.canvas.create_text(self.getDecisionPos(v), text="fs")
         self.edges = {}
         for e in self.model.conf.edges():
+            self.canvas.create_line(self.getEdgePos(e), fill='gray')
             self.edges[e] = self.canvas.create_line(self.getEdgePos(e), arrow='last')
 
     def draw(self):
