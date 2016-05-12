@@ -138,16 +138,7 @@ class GurobiModel:
                 # go can be 1, when status is right
                 mo.addConstr(go[u,w,d,t] -quicksum(uWhatsNow) <= 0, 'si')
 
-                if (d == 'N' or d == 'S') and w != 'r':
-                    # movement is slow and length is long
-                    td = 5
-                elif (d == 'E' or d == 'W') and w == 'r':
-                    # movement fast and lenght short
-                    td = 2
-                else:
-                    # movement fast and long or movement slow and short
-                    td = 3
-
+                td = getMovementTime(d,w)
                 td1 = td - 1
 
                 if not checkTime(t,td1):
@@ -294,15 +285,7 @@ class GurobiModel:
                 # collect stuff
                 incoming = []
                 for w in whats.mcWhat:
-                    if (d == 'N' or d == 'S') and (w in whats.dropWhat):
-                        # movement is slow and length is long
-                        td = 5
-                    elif (d == 'E' or d == 'W') and (w in whats.robotsWhat):
-                        # movement fast and lenght short
-                        td = 2
-                    else:
-                        # movement fast and long or movement slow and short
-                        td = 3
+                    td = getMovementTime(d,w)
                     for tdd in range(td):
                         tc = t+tdd
                         if not checkTime(t, tdd):
