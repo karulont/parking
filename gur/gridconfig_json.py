@@ -1,6 +1,5 @@
 import itertools
 from direction import *
-from util import *
 from nodestatus import *
 
 class GridConfig_json:

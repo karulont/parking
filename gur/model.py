@@ -1,7 +1,6 @@
 from gurobipy import *
 import itertools
 import sys
-from util import *
 
 from vars import *
 
