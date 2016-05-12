@@ -33,8 +33,6 @@ class GurobiModel:
         ysize = self.conf.ysize
 
         nodes = self.conf.nodes
-        edg = self.conf.edg
-        neighbours = self.conf.neighbours
         timeiter = self.conf.timeiter
         whats = self.conf.whats
 
@@ -55,7 +53,7 @@ class GurobiModel:
 
         # important: at time 0 everything is still so do not allow continue or stop
         for u,w,d in itertools.product(self.conf.nodes(), whats.mcWhat, diriter):
-            v = self.conf.edg(u,d);
+            v = edg(u,d);
             if not self.conf.checkEdge((u,v)):
                 # Off grid in that direction
                 continue

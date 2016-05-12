@@ -21,32 +21,9 @@ class GridConfig:
 
     def edges(self):
         for u in self.nodes():
-            for v in self.neighbours(u):
+            for v in neighbours(u):
                 if v in self.nodeSet:
                     yield (u,v)
-
-    def neighbours(self, node):
-        x,y = node
-        if x > 0:
-            yield (x-1,y)
-        if y > 0:
-            yield (x,y-1)
-        if x < self.xsize - 1:
-            yield (x+1,y)
-        if y < self.ysize - 1:
-            yield (x,y+1)
-
-    def edg(self, node, d):
-        assert d in diriter, "%r" % d
-        x,y = node
-        if d == 'W': # west
-            return (x - 1, y)
-        elif d == 'N': # north
-            return (x, y - 1)
-        elif d == 'E':
-            return (x+1, y)
-        elif d == 'S':
-            return (x, y + 1)
 
     def checkNode(self, node):
         return node in self.nodeSet

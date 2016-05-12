@@ -25,3 +25,30 @@ def getMovementTime(d,w):
     else:
         # movement fast and long or movement slow and short
         return 3
+
+def edg(node, d):
+    assert d in diriter, "%r" % d
+    x,y = node
+    if d == 'W': # west
+        return (x - 1, y)
+    elif d == 'N': # north
+        return (x, y - 1)
+    elif d == 'E':
+        return (x+1, y)
+    elif d == 'S':
+        return (x, y + 1)
+
+def neighbours(node):
+    x,y = node
+    yield (x-1,y)
+    yield (x,y-1)
+    yield (x+1,y)
+    yield (x,y+1)
+
+
+def getEdgeDir(e):
+    u,v = e
+    for d in diriter:
+        if edg(u,d) == v:
+            return d
+    assert False, 'Edge %r is not a valid grid edge' % e
