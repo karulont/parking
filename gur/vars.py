@@ -24,15 +24,16 @@ class Vars():
         drop = {}
 
         for v in conf.nodes():
-            for w,d,t in itertools.product(whats.mcWhat, diriter, conf.timeiter):
-                if conf.checkEdge((v,edg(v,d))):
-                    addVar(go, "go", (v,w,d,t))
-                    addVar(stop, "stop", (v,w,d,t))
-                    addVar(cont, "cont", (v,w,d,t))
             for w,t in itertools.product(whats.liftWhat, conf.timeiter):
                 addVar(lift, "lift", (v,w,t))
             for w,t in itertools.product(whats.dropWhat, conf.timeiter):
                 addVar(drop, "drop", (v,w,t))
+        for e,w,t in itertools.product(conf.edges(), whats.mcWhat, conf.timeiter):
+            d = getEdgeDir(e)
+            v,_ = e
+            addVar(go, "go", (v,w,d,t))
+            addVar(stop, "stop", (v,w,d,t))
+            addVar(cont, "cont", (v,w,d,t))
 
         # assing to instance
         self.nstat = nstat
