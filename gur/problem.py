@@ -3,7 +3,7 @@ from gridconfig_json import *
 import json
 from os.path import basename, splitext
 
-class Prod(TestBase, Situation):
+class Problem(TestBase, Situation):
     def __init__(self, jsonfile, maxt):
         with open(jsonfile, 'r') as f:
             self.jsondata = json.load(f)

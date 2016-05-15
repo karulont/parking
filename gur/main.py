@@ -4,6 +4,7 @@ from model import *
 from tests import *
 from testbase import all_tests
 from visualize import Visualize
+from problem import Problem
 import sys
 import argparse
 from os.path import basename, splitext
@@ -29,7 +30,7 @@ def runTests(args=None):
 def problem(args):
     print('problem')
     all_tests.clear()
-    test = prod.Prod(args.file, args.tmax)
+    test = Problem(args.file, args.tmax)
     test.run(args.write)
     if test.model.checkStatus():
         Visualize(test.model)
