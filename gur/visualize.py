@@ -3,8 +3,8 @@ from direction import *
 import itertools
 
 class Visualize:
-    def __init__(self, model):
-        self.model = model
+    def __init__(self, solution):
+        self.solution = solution
         self.time = 0
 
         self.shiftRight = 20
@@ -27,7 +27,7 @@ class Visualize:
 
     def key_released(self, event):
         if event.char == 'j':
-            if self.time < self.model.conf.maxt:
+            if self.time < self.solution.maxt:
                 self.time = self.time + 1
                 self.draw()
         elif event.char == 'k':
@@ -73,59 +73,29 @@ class Visualize:
     def setup(self):
         self.nodeStatus = {}
         self.nodeDecision = {}
-        for v in self.model.conf.nodes():
+        for v in self.solution.nodes:
             self.canvas.create_oval(self.getBBox(v))
             self.nodeStatus[v] = self.canvas.create_text(self.getStatusPos(v), text="asfs")
             self.nodeDecision[v] = self.canvas.create_text(self.getDecisionPos(v), text="fs")
         self.edges = {}
-        for e in self.model.conf.edges():
+        for e in self.solution.edges:
             self.canvas.create_line(self.getEdgePos(e), fill='gray')
             self.edges[e] = self.canvas.create_line(self.getEdgePos(e), arrow='last')
 
     def draw(self):
         # quick reference
-        nstat = self.model.vars.nstat
-        occu = self.model.vars.occu
-        go = self.model.vars.go
-        stop = self.model.vars.stop
-        cont = self.model.vars.cont
-        lift = self.model.vars.lift
-        drop = self.model.vars.drop
-
-        what = self.model.conf.whats.what
-        moveWhat = self.model.conf.whats.moveWhat
-        liftWhat = self.model.conf.whats.liftWhat
-        dropWhat = self.model.conf.whats.dropWhat
-        conf=self.model.conf
+        nstat = self.solution.nstat
+        occu = self.solution.occu
+        command = self.solution.command
 
         self.timeLabel.config(text = '%r' % self.time)
         t = self.time
-        for v in self.model.conf.nodes():
-            for w in what:
-                if nstat[v,w,t].x == 1:
-                    self.canvas.itemconfig(self.nodeStatus[v], text=w)
-                    break
+        for v in self.solution.nodes:
+            self.canvas.itemconfig(self.nodeStatus[v], text=nstat[v,self.time])
+            self.canvas.itemconfig(self.nodeDecision[v], text=command[v,self.time])
 
-            decision = ''
-            for d,w in itertools.product(diriter, self.model.conf.whats.mcWhat):
-                if conf.checkEdge((v,edg(v,d))):
-                    if go[v,w,d,t].x == 1:
-                        decision = 'GO_{}{}'.format(d,w)
-                    if stop[v,w,d,t].x == 1:
-                        decision = 'STOP_{}{}'.format(d,w)
-                    if cont[v,w,d,t].x == 1:
-                        decision = 'CONT_{}{}'.format(d,w)
-            for w in liftWhat:
-                if lift[v,w,t].x == 1:
-                    decision = 'LIFT_{}'.format(w)
-            for w in dropWhat:
-                if drop[v,w,t].x == 1:
-                    decision = 'DROP_{}'.format(w)
-            self.canvas.itemconfig(self.nodeDecision[v], text=decision)
-
-        for e in self.model.conf.edges():
+        for e in self.solution.edges:
             state = HIDDEN
-            if occu[e,t].x == 1:
+            if occu[e,t] == 1:
                 state = NORMAL
-
             self.canvas.itemconfig(self.edges[e], state=state)

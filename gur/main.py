@@ -7,8 +7,7 @@ from visualize import Visualize
 from problem import Problem
 import sys
 import argparse
-from os.path import basename, splitext
-
+import pickle
 
 def runTests(args=None):
     for i,t in enumerate(all_tests):
@@ -28,15 +27,18 @@ def runTests(args=None):
         test.model.findIIS(test.name)
 
 def problem(args):
-    print('problem')
-    all_tests.clear()
     test = Problem(args.file, args.tmax)
     test.run(args.write)
     if test.model.checkStatus():
-        Visualize(test.model)
+        sol = test.model.extractSolution()
+        with open(test.name + ('-%d' % args.tmax) + '.sol', 'wb') as f:
+            pickle.dump(sol,f)
+        Visualize(sol)
 
 def view(args):
-    print('view')
+    with open(args.file, 'rb') as f:
+        sol = pickle.load(f)
+        Visualize(sol)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='IP model for parking problem')

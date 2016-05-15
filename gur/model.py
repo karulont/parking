@@ -332,6 +332,49 @@ class GurobiModel:
     def writeToFile(self, file):
         self.model.write(file + '.lp.bz2')
 
+    def extractSolution(self):
+        solution = Solution()
+        solution.maxt = self.conf.maxt
+        solution.nodes = set(self.conf.nodes())
+        solution.edges = set(self.conf.edges())
+        nstat = {}
+        occu = {}
+        command = {}
+
+        whats = self.conf.whats
+        timeiter = self.conf.timeiter
+        nodes = self.conf.nodes
+        edges = self.conf.edges
+
+        for v,w,t in itertools.product(nodes(),whats.what, timeiter):
+            if self.vars.nstat[v,w,t].x == 1:
+                nstat[v,t] = w
+        for v,t in itertools.product(nodes(), timeiter):
+            decision = ''
+            for d,w in itertools.product(diriter, whats.mcWhat):
+                if self.conf.checkEdge((v,edg(v,d))):
+                    if self.vars.go[v,w,d,t].x == 1:
+                        decision = 'GO_{}{}'.format(d,w)
+                    if self.vars.stop[v,w,d,t].x == 1:
+                        decision = 'STOP_{}{}'.format(d,w)
+                    if self.vars.cont[v,w,d,t].x == 1:
+                        decision = 'CONT_{}{}'.format(d,w)
+            for w in whats.liftWhat:
+                if self.vars.lift[v,w,t].x == 1:
+                    decision = 'LIFT_{}'.format(w)
+            for w in whats.dropWhat:
+                if self.vars.drop[v,w,t].x == 1:
+                    decision = 'DROP_{}'.format(w)
+            command[v,t] = decision
+
+        for e,t in itertools.product(edges(), timeiter):
+            occu[e,t] = self.vars.occu[e,t].x
+
+        solution.nstat = nstat
+        solution.command = command
+        solution.occu = occu
+        return solution
+
     def setSituation(self, sit):
         sit.situation(self.model, self.vars)
         sit.objective(self.model, self.vars)
@@ -344,3 +387,5 @@ class GurobiModel:
         self.model.computeIIS()
         self.model.write(fname + '.ilp')
 
+class Solution:
+    pass
