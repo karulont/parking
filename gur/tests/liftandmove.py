@@ -14,9 +14,9 @@ class LiftAndMove(TestBase, Situation):
         nstat = vars.nstat
         go = vars.go
 
-        mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,0), '0', 0] == 1)
-        mo.addConstr(nstat[specifyNode(2,0), 'r0', 0] == 1)
+        self.setInitialStatus((0,0), 'e')
+        self.setInitialStatus((1,0), '0')
+        self.setInitialStatus((2,0), 'r0')
 
     def objective(self, model, vars):
         for t in self.conf.timeiter:
@@ -48,9 +48,9 @@ class LiftAndMoveForced(TestBase, Situation):
         nstat = vars.nstat
         go = vars.go
 
-        mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,0), '1', 0] == 1)
-        mo.addConstr(nstat[specifyNode(2,0), 'r0', 0] == 1)
+        self.setInitialStatus((0,0), 'e')
+        self.setInitialStatus((1,0), '1')
+        self.setInitialStatus((2,0), 'r0')
 
         mo.addConstr(go[(2,0),'r','W',0] == 1)
         mo.addConstr(vars.lift[(1,0),'r1',2] == 1)
@@ -87,12 +87,12 @@ class LiftAndMove3(TestBase, Situation):
         nstat = vars.nstat
         go = vars.go
 
-        mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,0), '1', 0] == 1)
-        mo.addConstr(nstat[specifyNode(2,0), 'r0', 0] == 1)
-        mo.addConstr(nstat[specifyNode(0,1), '0', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,1), 'r', 0] == 1)
-        mo.addConstr(nstat[specifyNode(2,1), 'e', 0] == 1)
+        self.setInitialStatus((0,0), 'e')
+        self.setInitialStatus((1,0), '1')
+        self.setInitialStatus((2,0), 'r0')
+        self.setInitialStatus((0,1), '0')
+        self.setInitialStatus((1,1), 'r')
+        self.setInitialStatus((2,1), 'e')
 
     def objective(self, model, vars):
         for t in self.conf.timeiter:

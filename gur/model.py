@@ -1,6 +1,7 @@
 from gurobipy import *
 import itertools
 import sys
+from solution import Solution
 
 from vars import *
 
@@ -334,6 +335,7 @@ class GurobiModel:
 
     def extractSolution(self):
         solution = Solution()
+        solution.full = True
         solution.maxt = self.conf.maxt
         solution.nodes = set(self.conf.nodes())
         solution.edges = set(self.conf.edges())
@@ -386,6 +388,3 @@ class GurobiModel:
     def findIIS(self, fname):
         self.model.computeIIS()
         self.model.write(fname + '.ilp')
-
-class Solution:
-    pass

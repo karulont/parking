@@ -17,12 +17,11 @@ def runTests(args=None):
                 % (i,t.name, t.time, t.shouldPass, t.passed, t.checked,
                     'success' if t.overall else 'fail'))
 
-
     print('\nChoose one to inspect!')
     index = sys.stdin.readline()
     test = all_tests[int(index)-1]
     if test.model.checkStatus():
-        Visualize(test.model)
+        Visualize(test.model.extractSolution())
     else:
         test.model.findIIS(test.name)
 
@@ -56,5 +55,4 @@ if __name__ == '__main__':
     testParser.set_defaults(func=runTests)
     parser.set_defaults(func=lambda x: parser.print_help())
     args = parser.parse_args()
-    print(args)
     args.func(args)

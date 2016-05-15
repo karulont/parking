@@ -14,9 +14,9 @@ class MovingTogether(TestBase, Situation):
         nstat = vars.nstat
         go = vars.go
 
-        mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,0), 'r', 0] == 1)
-        mo.addConstr(nstat[specifyNode(2,0), 'r', 0] == 1)
+        self.setInitialStatus((0,0), 'e')
+        self.setInitialStatus((1,0), 'r')
+        self.setInitialStatus((2,0), 'r')
         mo.addConstr(go[(1,0), 'r', 'W', 0] == 1)
         mo.addConstr(go[(2,0), 'r', 'W', 0] == 1)
 
@@ -44,11 +44,11 @@ class MovingTogetherDifferent(TestBase, Situation):
         nstat = vars.nstat
         go = vars.go
 
-        mo.addConstr(nstat[specifyNode(0,0), '1', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,0), 'r', 0] == 1)
-        mo.addConstr(nstat[specifyNode(2,0), 'r0', 0] == 1)
-        mo.addConstr(nstat[specifyNode(3,0), 'r', 0] == 1)
-        mo.addConstr(nstat[specifyNode(4,0), '0r', 0] == 1)
+        self.setInitialStatus((0,0), '1')
+        self.setInitialStatus((1,0), 'r')
+        self.setInitialStatus((2,0), 'r0')
+        self.setInitialStatus((3,0), 'r')
+        self.setInitialStatus((4,0), '0r')
         mo.addConstr(go[(1,0), 'r', 'W', 0] == 1)
         mo.addConstr(go[(2,0), 'r', 'W', 0] == 1)
         mo.addConstr(go[(3,0), 'r', 'W', 0] == 1)
@@ -77,9 +77,9 @@ class MovingTogetherBad(TestBase, Situation):
         nstat = vars.nstat
         go = vars.go
 
-        mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,0), 'r', 0] == 1)
-        mo.addConstr(nstat[specifyNode(2,0), 'r', 0] == 1)
+        self.setInitialStatus((0,0), 'e')
+        self.setInitialStatus((1,0), 'r')
+        self.setInitialStatus((2,0), 'r')
         mo.addConstr(go[(1,0), 'r', 'W', 0] == 1)
         mo.addConstr(go[(2,0), 'r', 'W', 0] == 1)
         mo.addConstr(nstat[(1,0),'r0', 2] == 1)

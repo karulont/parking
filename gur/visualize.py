@@ -6,6 +6,7 @@ class Visualize:
     def __init__(self, solution):
         self.solution = solution
         self.time = 0
+        self.full = solution.full
 
         self.shiftRight = 20
         self.shiftDown = 20
@@ -23,7 +24,8 @@ class Visualize:
         self.setup()
         self.draw()
 
-        mainloop()
+        if self.full:
+            mainloop()
 
     def key_released(self, event):
         if event.char == 'j':
@@ -80,12 +82,12 @@ class Visualize:
         self.edges = {}
         for e in self.solution.edges:
             self.canvas.create_line(self.getEdgePos(e), fill='gray')
-            self.edges[e] = self.canvas.create_line(self.getEdgePos(e), arrow='last')
+            self.edges[e] = self.canvas.create_line(self.getEdgePos(e), arrow='last',
+                    state=HIDDEN)
 
     def draw(self):
         # quick reference
         nstat = self.solution.nstat
-        occu = self.solution.occu
         command = self.solution.command
 
         self.timeLabel.config(text = '%r' % self.time)
@@ -94,6 +96,10 @@ class Visualize:
             self.canvas.itemconfig(self.nodeStatus[v], text=nstat[v,self.time])
             self.canvas.itemconfig(self.nodeDecision[v], text=command[v,self.time])
 
+        if not self.full:
+            return
+
+        occu = self.solution.occu
         for e in self.solution.edges:
             state = HIDDEN
             if occu[e,t] == 1:

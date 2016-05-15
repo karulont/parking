@@ -14,9 +14,9 @@ class PersistanceNoRobots(TestBase, Situation):
         nstat = vars.nstat
         go = vars.go
 
-        mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,0), '0', 0] == 1)
-        mo.addConstr(nstat[specifyNode(2,0), '0', 0] == 1)
+        self.setInitialStatus((0,0), 'e')
+        self.setInitialStatus((1,0), '0')
+        self.setInitialStatus((2,0), '0')
 
         mo.addConstr(nstat[(0,0), 'r', 20] == 1)
 

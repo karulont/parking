@@ -14,12 +14,12 @@ class LargeTest(TestBase, Situation):
         nstat = vars.nstat
         go = vars.go
 
-        mo.addConstr(nstat[specifyNode(0,0), 'r', 0] == 1)
-        mo.addConstr(nstat[specifyNode(0,1), 'r', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,1), 'r', 0] == 1)
+        self.setInitialStatus(specifyNode(0,0), 'r')
+        self.setInitialStatus(specifyNode(0,1), 'r')
+        self.setInitialStatus(specifyNode(1,1), 'r')
         # all other nodes filled with empty
         for v in set(self.conf.nodes()).difference(self.definedNodes):
-            mo.addConstr(nstat[v, 'e', 0] == 1)
+            self.setInitialStatus(v, 'e')
 
     def objective(self, model, vars):
         for t in self.conf.timeiter:
@@ -41,13 +41,13 @@ class Puzzle(TestBase, Situation):
         nstat = vars.nstat
         go = vars.go
 
-        mo.addConstr(nstat[specifyNode(2,2), 'r', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,1), '0', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,2), '0', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,0), 'r', 0] == 1)
+        self.setInitialStatus((2,2), 'r')
+        self.setInitialStatus((1,1), '0')
+        self.setInitialStatus((1,2), '0')
+        self.setInitialStatus((1,0), 'r')
         # all other nodes filled with empty
         for v in set(self.conf.nodes()).difference(self.definedNodes):
-            mo.addConstr(nstat[v, 'e', 0] == 1)
+            self.setInitialStatus(v, 'e')
 
     def objective(self, model, vars):
         for t in self.conf.timeiter:
