@@ -3,7 +3,7 @@ from testbase import *
 class PersistanceNoRobots(TestBase, Situation):
     def __init__(self):
         TestBase.__init__(self)
-        self.conf = GridConfig(3, 1, 30, 0)
+        self.conf = GridConfig(3, 1, 30, 1)
         Situation.__init__(self, self.conf)
         self.situationObj = self
         self.shouldPass = False
@@ -15,8 +15,8 @@ class PersistanceNoRobots(TestBase, Situation):
         go = vars.go
 
         mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,0), 'c', 0] == 1)
-        mo.addConstr(nstat[specifyNode(2,0), 'c', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,0), '0', 0] == 1)
+        mo.addConstr(nstat[specifyNode(2,0), '0', 0] == 1)
 
         mo.addConstr(nstat[(0,0), 'r', 20] == 1)
 

@@ -2,18 +2,17 @@ class NodeStatuses:
     def __init__(self, K):
         self.K = K
         self.what, self.scj, self.rscj, self.scrj = makeWhat(self.K)
-        self.moveWhat = set(['r', 'cr', 'rc']).union(self.rscj, self.scrj)
-        self.mcWhat = set(['r', 'cr']).union(self.scrj)
-        self.noRobotWhat = set(['e', 'c']).union(self.scj)
-        self.liftWhat = set(['rc']).union(self.rscj)
-        self.dropWhat = set(['cr']).union(self.scrj)
-        self.carsWhat = set(['c']).union(self.scj)
-        self.robotsWhat = set(['r','rc']).union(self.rscj)
+        self.moveWhat = set(['r']).union(self.rscj, self.scrj)
+        self.mcWhat = set(['r']).union(self.scrj)
+        self.noRobotWhat = set(['e']).union(self.scj)
+        self.liftWhat = self.rscj
+        self.dropWhat = self.scrj
+        self.carsWhat = self.scj
+        self.robotsWhat = set(['r']).union(self.rscj)
 
         self.nodeStatusIO = self.makeNodeStatusIO()
         self.removeRobotWhat = makeRemoveRobotWhat(self.K)
         self.dropWhatHelper = makeDropWhatHelper(self.K)
-        self.usPlusWs = makeUsPlusWs(self.K)
         self.getMovingComponent = makeGetMovingComponent(self.K)
         self.removeMovingComponent = makeRemoveMovingComponent(self.K)
         self.addMovingComponent = makeAddMovingComponent(self.K)
@@ -35,29 +34,24 @@ class NodeStatuses:
 
 def makeDropWhatHelper(K):
     dwh = {}
-    dwh['cr'] = 'rc'
-    dwh['rc'] = 'cr'
     for i in range(K):
-        dwh['scr'+str(i)] = 'rsc'+str(i)
-        dwh['rsc'+str(i)] = 'scr'+str(i)
+        dwh[str(i)+'r'] = 'r'+str(i)
+        dwh['r'+str(i)] = str(i)+'r'
     return dwh
 
 def makeWhat(K):
     what = set()
     what.add('e')
-    what.add('c')
     scj = set()
     for j in range(K):
-        scj.add('sc'+str(j))
+        scj.add(str(j))
     what.add('r')
-    what.add('rc')
     rscj = set()
     for j in range(K):
-        rscj.add('rsc'+str(j))
-    what.add('cr')
+        rscj.add('r'+str(j))
     scrj = set()
     for j in range(K):
-        scrj.add('scr'+str(j))
+        scrj.add(str(j)+'r')
     what.add('lft')
     what.add('drp')
 
@@ -68,48 +62,23 @@ def makeWhat(K):
 def makeRemoveRobotWhat(K):
     what = {}
     for j in range(K):
-        s = 'sc' + str(j)
+        s = str(j)
         what[s] = s
     what['r'] = 'e'
-    what['rc'] = 'c'
     for j in range(K):
-        s = 'rsc' + str(j)
-        what[s] = 'sc' + str(j)
-    what['cr'] = 'e'
+        s = 'r' + str(j)
+        what[s] = str(j)
     for j in range(K):
-        s = 'scr' + str(j)
+        s = str(j) + 'r'
         what[s] = 'e'
-    return what
-
-def makeUsPlusWs(K):
-    what = {}
-    what['e'] = {'r':'r', 'rc':'r', 'cr':'cr'}
-    what['c'] = {'r':'rc', 'rc':'rc'}
-    for i in range(K):
-        c = 'sc' + str(i)
-        rc = 'rsc' + str(i)
-        cr = 'scr' + str(i)
-        what['e'][rc] = 'r'
-        what['e'][cr] = cr
-        what['c'][rc] = 'rc'
-        what[c] = {'r':rc, 'rc':rc}
-    for i in range(K):
-        c = 'sc' + str(i)
-        rc = 'rsc' + str(i)
-        for j in range(K):
-            rc1 = 'rsc' + str(j)
-            what[c][rc1] = rc
-
     return what
 
 def makeGetMovingComponent(K):
     d = {}
     d['r'] = 'r'
-    d['rc'] = 'r'
-    d['cr'] = 'cr'
     for i in range(K):
-        d['rsc'+str(i)] = 'r'
-        d['scr'+str(i)] = 'scr'+str(i)
+        d['r'+str(i)] = 'r'
+        d[str(i)+'r'] = str(i)+'r'
     return d
 
 def makeRemoveMovingComponent(K):
@@ -117,19 +86,17 @@ def makeRemoveMovingComponent(K):
 
 def makeAddMovingComponent(K):
     d = {}
-    d['e'] = {'r':'r', 'cr':'cr'}
-    d['c'] = {'r':'rc'}
+    d['e'] = {'r':'r'}
     for i in range(K):
-        c = 'sc' + str(i)
-        rc = 'rsc' + str(i)
-        cr = 'scr' + str(i)
+        c = str(i)
+        rc = 'r' + str(i)
+        cr = str(i) + 'r'
         d['e'][cr] = cr
-        d['c'][rc] = 'rc'
-        d[c] = {'r':rc, 'rc':rc}
+        d[c] = {'r':rc}
     for i in range(K):
-        c = 'sc' + str(i)
-        rc = 'rsc' + str(i)
+        c = str(i)
+        rc = 'r' + str(i)
         for j in range(K):
-            rc1 = 'rsc' + str(j)
+            rc1 = 'r' + str(j)
             d[c][rc1] = rc
     return d

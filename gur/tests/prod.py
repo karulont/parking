@@ -37,12 +37,5 @@ class Prod(TestBase, Situation):
 def translate(status):
     if status == '':
         return 'e'
-    if status == 'r':
+    else:
         return status
-    if status.startswith('r'):
-        return 'rsc' + status[1:]
-    if status.endswith('r'):
-        return 'scr' + status[:-1]
-    if status.isnumeric():
-        return 'sc' + status
-    raise Error(asd)

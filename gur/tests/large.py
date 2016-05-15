@@ -3,7 +3,7 @@ from testbase import *
 class LargeTest(TestBase, Situation):
     def __init__(self):
         TestBase.__init__(self)
-        self.conf = GridConfig(4, 2, 10, 1)
+        self.conf = GridConfig(4, 2, 10, 0)
         Situation.__init__(self, self.conf)
         self.situationObj = self
         self.shouldPass = True
@@ -30,7 +30,7 @@ class LargeTest(TestBase, Situation):
 class Puzzle(TestBase, Situation):
     def __init__(self):
         TestBase.__init__(self)
-        self.conf = GridConfig(3, 3, 15, 0)
+        self.conf = GridConfig(3, 3, 15, 1)
         Situation.__init__(self, self.conf)
         self.situationObj = self
         self.shouldPass = True
@@ -42,8 +42,8 @@ class Puzzle(TestBase, Situation):
         go = vars.go
 
         mo.addConstr(nstat[specifyNode(2,2), 'r', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,1), 'c', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,2), 'c', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,1), '0', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,2), '0', 0] == 1)
         mo.addConstr(nstat[specifyNode(1,0), 'r', 0] == 1)
         # all other nodes filled with empty
         for v in set(self.conf.nodes()).difference(self.definedNodes):

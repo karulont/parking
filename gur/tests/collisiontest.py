@@ -60,10 +60,10 @@ class CollisionWithSpecial(TestBase, Situation):
 
         mo.addConstr(nstat[specifyNode(0,0), 'e', 0] == 1)
         mo.addConstr(nstat[specifyNode(1,0), 'e', 0] == 1)
-        mo.addConstr(nstat[specifyNode(0,1), 'scr0', 0] == 1)
-        mo.addConstr(nstat[specifyNode(1,1), 'scr1', 0] == 1)
-        mo.addConstr(go[(0,1), 'scr0', 'E', 0] == 1)
-        mo.addConstr(go[(1,1), 'scr1', 'W', 0] == 1)
+        mo.addConstr(nstat[specifyNode(0,1), '0r', 0] == 1)
+        mo.addConstr(nstat[specifyNode(1,1), '1r', 0] == 1)
+        mo.addConstr(go[(0,1), '0r', 'E', 0] == 1)
+        mo.addConstr(go[(1,1), '1r', 'W', 0] == 1)
 
 class CollisionTestOrthogonal(TestBase, Situation):
     def __init__(self):
