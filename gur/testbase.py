@@ -9,10 +9,12 @@ class TestBase:
         all_tests.append(self)
         self.log=log
 
-    def run(self):
+    def run(self, writeModel=False):
         self.model = GurobiModel(self.conf, log=self.log)
+        self.model.addConstraints()
         self.model.setSituation(self.situationObj)
-        self.model.writeToFile(self.name)
+        if writeModel:
+            self.model.writeToFile(self.name)
         self.model.optimize()
         self.passed = self.model.checkStatus()
         self.checked = False

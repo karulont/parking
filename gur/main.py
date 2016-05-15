@@ -5,15 +5,11 @@ from tests import *
 from testbase import all_tests
 from visualize import Visualize
 import sys
+import argparse
+from os.path import basename, splitext
 
-def main():
-    if len(sys.argv) == 3:
-        all_tests.clear()
-        prod.Prod(sys.argv[1], int(sys.argv[2]))
 
-    runTests()
-
-def runTests():
+def runTests(args=None):
     for i,t in enumerate(all_tests):
         i = i + 1
         t.run()
@@ -30,5 +26,32 @@ def runTests():
     else:
         test.model.findIIS(test.name)
 
+def problem(args):
+    print('problem')
+    all_tests.clear()
+    test = prod.Prod(args.file, args.tmax)
+    test.run(args.write)
+    if test.model.checkStatus():
+        Visualize(test.model)
+
+def view(args):
+    print('view')
+
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='IP model for parking problem')
+    subparsers = parser.add_subparsers()
+    solveParser = subparsers.add_parser('solve', description='solve a problem')
+    solveParser.add_argument('-w', dest='write', action='store_true', default=False,
+            help='write problem to file')
+    solveParser.add_argument('file', help='problem file')
+    solveParser.add_argument('tmax', type=int, help='Number of timesteps in the model')
+    solveParser.set_defaults(func=problem)
+    viewParser = subparsers.add_parser('view', description='view solution')
+    viewParser.add_argument('file', help='problem file')
+    viewParser.set_defaults(func=view)
+    testParser = subparsers.add_parser('test', description='run tests')
+    testParser.set_defaults(func=runTests)
+    parser.set_defaults(func=lambda x: parser.print_help())
+    args = parser.parse_args()
+    print(args)
+    args.func(args)

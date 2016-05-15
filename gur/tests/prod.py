@@ -46,5 +46,3 @@ def translate(status):
     if status.isnumeric():
         return 'sc' + status
     raise Error(asd)
-
-#Prod('../data/marsi3a.json', 60)
