@@ -30,6 +30,7 @@ class LiftAndMove(TestBase, Situation):
             , nstat[(2,0), '0', 2].x == 1
             , nstat[(1,0), '0r', 8].x == 1
             , nstat[(0,0), '0r', 11].x == 1
+            , nstat[(0,0), 'r0', 13].x == 1
             ]
 
         return all(conditions)

@@ -1,6 +1,6 @@
 from testbase import *
 
-class PersistanceNoRobots(TestBase, Situation):
+class PersistenceNoRobots(TestBase, Situation):
     def __init__(self):
         TestBase.__init__(self)
         self.conf = GridConfig(3, 1, 30, 1)
@@ -25,7 +25,7 @@ class PersistanceNoRobots(TestBase, Situation):
             vars.nstat[(0,0),'r',t].obj = -4
             vars.nstat[(1,0),'r',t].obj = -4
             for e in self.conf.edges():
-                vars.occu[e,t].obj = 1;
+                vars.occu[e,t].obj = -1;
 
-PersistanceNoRobots()
+PersistenceNoRobots()
 

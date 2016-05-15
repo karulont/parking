@@ -59,6 +59,8 @@ class MovingTogetherDifferent(TestBase, Situation):
         conditions = \
             [ nstat[(1,0), 'r', 2].x == 1
             , nstat[(2,0), 'r0', 2].x == 1
+            , nstat[(3,0), '0r', 3].x == 1
+            , nstat[(4,0), 'e', 3].x == 1
             ]
 
         return all(conditions)
