@@ -4,7 +4,7 @@ from model import *
 from tests import *
 from testbase import all_tests
 from visualize import Visualize
-from problem import Problem
+from problem import *
 import sys
 import argparse
 import pickle
@@ -26,7 +26,8 @@ def runTests(args=None):
         test.model.findIIS(test.name)
 
 def problem(args):
-    test = Problem(args.file, args.tmax)
+    print(args)
+    test = Problem(args.file, args.tmax, args.constr, args.objective)
     test.run(args.write)
     if test.model.checkStatus():
         sol = test.model.extractSolution()
@@ -43,6 +44,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='IP model for parking problem')
     subparsers = parser.add_subparsers()
     solveParser = subparsers.add_parser('solve', description='solve a problem')
+    solveParser.add_argument('-c', dest='constr', action='store_true', default=False,
+            help='use constraints to fix terminal status')
+    solveParser.add_argument('-o','--objective', default='full',
+            choices=['none', 'timeonly', 'energy', 'full'],
+            help='use the specified objective function')
     solveParser.add_argument('-w', dest='write', action='store_true', default=False,
             help='write problem to file')
     solveParser.add_argument('file', help='problem file')
