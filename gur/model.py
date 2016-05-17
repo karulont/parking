@@ -270,8 +270,8 @@ class GurobiModel:
             away = quicksum(away)
             mo.addConstr(more <= 1)
             mo.addConstr(away <= 1)
+            mo.addConstr(more + away <= 2)
             mo.addConstr(nstat[u,w,t] -nstat[u,w,t+1] -more -away <= 0)
-            mo.addConstr(nstat[u,w,t] -nstat[u,w,t+1] +more +away <= 2)
             mo.addConstr(nstat[u,w,t+1] +more -away <= 1)
 
         # edge not in use constraints
