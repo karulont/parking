@@ -97,12 +97,16 @@ class Problem(TestBase, Situation):
             vars.drop[v].obj = 0.1 * timeCost(t)
 
         t = self.conf.maxt
+        whats = self.conf.whats
 
         for x,y in self.conf.nodes():
-            for w in self.conf.whats.what:
+            for w in whats.what:
                 wp = translate(self.jsondata[4][y][x])
-                if w != wp:
-                    vars.nstat[(x,y), w, t].obj = 10
+                o = whats.getObject[wp]
+                o1 = whats.getObject[w]
+                if o is not None:
+                    if o != o1:
+                        vars.nstat[(x,y), w, t].obj = 10
 
 def translate(status):
     if status == '':

@@ -17,6 +17,8 @@ class NodeStatuses:
         self.removeMovingComponent = makeRemoveMovingComponent(self.K)
         self.addMovingComponent = makeAddMovingComponent(self.K)
 
+        self.getObject = makeGetObject(self.K)
+
 
     def makeNodeStatusIO(self):
         sio = {}
@@ -99,4 +101,19 @@ def makeAddMovingComponent(K):
         for j in range(K):
             rc1 = 'r' + str(j)
             d[c][rc1] = rc
+    return d
+
+def makeGetObject(K):
+    d = {}
+    d['e'] = None
+    d['r'] = None
+    d['drp'] = None
+    d['lft'] = None
+    for i in range(K):
+        c = str(i)
+        rc = 'r' + str(i)
+        cr = str(i) + 'r'
+        d[c] = c
+        d[rc] = c
+        d[cr] = cr
     return d
