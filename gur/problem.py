@@ -78,18 +78,22 @@ class Problem(TestBase, Situation):
     def objectiveProgressive(self, model, vars):
         print('Using progressive energy objective function')
         def timeCost(t):
-            return 1 + t / self.conf.maxt
+            return 1 + (t / self.conf.maxt)
 
         for v in vars.go:
             t = v[3]
             vars.go[v].obj = 0.2 * timeCost(t)
         for v in vars.cont:
+            t = v[3]
             vars.cont[v].obj = 0.1 * timeCost(t)
         for v in vars.stop:
+            t = v[3]
             vars.stop[v].obj = 0.2 * timeCost(t)
         for v in vars.lift:
+            t = v[2]
             vars.lift[v].obj = 0.4 * timeCost(t)
         for v in vars.drop:
+            t = v[2]
             vars.drop[v].obj = 0.1 * timeCost(t)
 
         t = self.conf.maxt
