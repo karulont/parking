@@ -47,7 +47,7 @@ if __name__ == '__main__':
     solveParser.add_argument('-c', dest='constr', action='store_true', default=False,
             help='use constraints to fix terminal status')
     solveParser.add_argument('-o','--objective', default='full',
-            choices=['none', 'timeonly', 'energy', 'full'],
+            choices=['none', 'timeonly', 'energy', 'full', 'prog'],
             help='use the specified objective function')
     solveParser.add_argument('-w', dest='write', action='store_true', default=False,
             help='write problem to file')

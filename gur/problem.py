@@ -22,6 +22,8 @@ class Problem(TestBase, Situation):
                 self.objective = self.objectiveEnergy
             elif objective == 'full':
                 self.objective = self.objectiveFull
+            elif objective == 'prog':
+                self.objective = self.objectiveProgressive
             else:
                 self.objective = self.objectiveNone
 
@@ -72,6 +74,31 @@ class Problem(TestBase, Situation):
         print('Using full objective function')
         self.objectiveDiff(model, vars)
         self.objectiveEnergy(model, vars)
+
+    def objectiveProgressive(self, model, vars):
+        print('Using progressive energy objective function')
+        def timeCost(t):
+            return 1 + t / self.conf.maxt
+
+        for v in vars.go:
+            t = v[3]
+            vars.go[v].obj = 0.2 * timeCost(t)
+        for v in vars.cont:
+            vars.cont[v].obj = 0.1 * timeCost(t)
+        for v in vars.stop:
+            vars.stop[v].obj = 0.2 * timeCost(t)
+        for v in vars.lift:
+            vars.lift[v].obj = 0.4 * timeCost(t)
+        for v in vars.drop:
+            vars.drop[v].obj = 0.1 * timeCost(t)
+
+        t = self.conf.maxt
+
+        for x,y in self.conf.nodes():
+            for w in self.conf.whats.what:
+                wp = translate(self.jsondata[4][y][x])
+                if w != wp:
+                    vars.nstat[(x,y), w, t].obj = 10
 
 def translate(status):
     if status == '':
