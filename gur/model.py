@@ -12,7 +12,7 @@ class GurobiModel:
         self.conf = conf
         self.model = Model("parking")
         self.model.params.LogToConsole = log
-        self.model.params.Threads = 4
+        self.model.params.Threads = 1
         self.model.params.Cuts = 0
 
         if self.conf.timeLimit is not None:
