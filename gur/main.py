@@ -26,12 +26,11 @@ def runTests(args=None):
         test.model.findIIS(test.name)
 
 def problem(args):
-    print(args)
     test = Problem(args.file, args.tmax, args.constr, args.objective, timeLimit=args.timeLimit)
     test.run(args.write)
     if test.model.checkStatus():
         sol = test.model.extractSolution()
-        with open(test.name + ('-%d' % args.tmax) + '.sol', 'wb') as f:
+        with open('solution.sol', 'wb') as f:
             pickle.dump(sol,f)
         Visualize(sol)
 
@@ -40,27 +39,15 @@ def view(args):
         sol = pickle.load(f)
         Visualize(sol)
 
+class Mockargs:
+    pass
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='IP model for parking problem')
-    subparsers = parser.add_subparsers()
-    solveParser = subparsers.add_parser('solve', description='solve a problem')
-    solveParser.add_argument('-c', dest='constr', action='store_true', default=False,
-            help='use constraints to fix terminal status')
-    solveParser.add_argument('-o','--objective', default='full',
-            choices=['none', 'timeonly', 'energy', 'full', 'prog'],
-            help='use the specified objective function')
-    solveParser.add_argument('-w', dest='write', action='store_true', default=False,
-            help='write problem to file')
-    solveParser.add_argument('-t', dest='timeLimit', type=int, default=None,
-            help='specify a time limit for gurobi')
-    solveParser.add_argument('file', help='problem file')
-    solveParser.add_argument('tmax', type=int, help='Number of timesteps in the model')
-    solveParser.set_defaults(func=problem)
-    viewParser = subparsers.add_parser('view', description='view solution')
-    viewParser.add_argument('file', help='problem file')
-    viewParser.set_defaults(func=view)
-    testParser = subparsers.add_parser('test', description='run tests')
-    testParser.set_defaults(func=runTests)
-    parser.set_defaults(func=lambda x: parser.print_help())
-    args = parser.parse_args()
-    args.func(args)
+    args = Mockargs()
+    args.objective = 'prog'
+    args.constr = False
+    args.write = False
+    args.timeLimit = int(sys.argv[1])
+    args.file = sys.argv[2]
+    args.tmax = int(sys.argv[3])
+    problem(args)
