@@ -8,6 +8,7 @@ class GridConfig:
         self.ysize = ysize
         self.maxt = maxt
         self.K = K
+        self.timeLimit = None
         self.timeiter = range(maxt+1)
 
         self.whats = NodeStatuses(self.K)

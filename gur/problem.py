@@ -4,12 +4,13 @@ import json
 from os.path import basename, splitext
 
 class Problem(TestBase, Situation):
-    def __init__(self, jsonfile, maxt, terminalConst, objective):
+    def __init__(self, jsonfile, maxt, terminalConst, objective, timeLimit=None):
         with open(jsonfile, 'r') as f:
             self.jsondata = json.load(f)
             TestBase.__init__(self, log=True)
             self.name = splitext(basename(jsonfile))[0]
             self.conf = GridConfig_json(self.jsondata, maxt)
+            self.conf.timeLimit = timeLimit
             Situation.__init__(self, self.conf)
             self.situationObj = self
             self.shouldPass = True

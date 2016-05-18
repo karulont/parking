@@ -27,7 +27,7 @@ def runTests(args=None):
 
 def problem(args):
     print(args)
-    test = Problem(args.file, args.tmax, args.constr, args.objective)
+    test = Problem(args.file, args.tmax, args.constr, args.objective, timeLimit=args.timeLimit)
     test.run(args.write)
     if test.model.checkStatus():
         sol = test.model.extractSolution()
@@ -51,6 +51,8 @@ if __name__ == '__main__':
             help='use the specified objective function')
     solveParser.add_argument('-w', dest='write', action='store_true', default=False,
             help='write problem to file')
+    solveParser.add_argument('-t', dest='timeLimit', type=int, default=None,
+            help='specify a time limit for gurobi')
     solveParser.add_argument('file', help='problem file')
     solveParser.add_argument('tmax', type=int, help='Number of timesteps in the model')
     solveParser.set_defaults(func=problem)

@@ -14,10 +14,9 @@ class GurobiModel:
         self.model.params.LogToConsole = log
         self.model.params.Threads = 4
         self.model.params.Cuts = 0
-        self.model.params.PrePasses = 3
-        self.model.params.Presolve = 2
-        self.model.params.Heuristics = 0
-        self.model.params.MIPFocus = 2
+
+        if self.conf.timeLimit is not None:
+            self.model.params.TimeLimit = self.conf.timeLimit
 
         def addFunc(set, setname, key):
             set[key] = self.model.addVar(vtype = GRB.BINARY,
