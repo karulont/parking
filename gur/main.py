@@ -32,7 +32,6 @@ def problem(args):
         sol = test.model.extractSolution()
         with open('solution.sol', 'wb') as f:
             pickle.dump(sol,f)
-        Visualize(sol)
 
 def view(args):
     with open(args.file, 'rb') as f:
