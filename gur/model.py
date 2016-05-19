@@ -52,15 +52,6 @@ class GurobiModel:
 
         mo.update()
 
-        # important: at time 0 everything is still so do not allow continue or stop
-        for u,w,d in itertools.product(self.conf.nodes(), whats.mcWhat, diriter):
-            v = edg(u,d);
-            if not self.conf.checkEdge((u,v)):
-                # Off grid in that direction
-                continue
-            mo.addConstr(cont[u,w,d,0] == 0);
-            mo.addConstr(stop[u,w,d,0] == 0);
-
         # some ideas for good constraints:
         #  * count the number of cars, make sure that it stays same
         #  * count the number of robots, make sure that it stays same
